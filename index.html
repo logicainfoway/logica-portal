@@ -1,0 +1,3039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logica Infoway — Export Operations Portal</title>
+<style>
+/* ═══════════════════════════════════════════════
+   TOKENS & RESET
+═══════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2d54;--navy2:#1a4d8f;--navy3:#2563b0;
+  --ink:#1a1a1a;--ink2:#3d3d3d;--ink3:#6b7280;--ink4:#9ca3af;
+  --surface:#ffffff;--s2:#f8f7f4;--s3:#f1efe9;--s4:#e8e5dc;
+  --border:#e2ddd4;--border2:#ccc8be;
+  --accent:#2563b0;--accent-l:#dbeafe;
+  --green:#166534;--green-l:#dcfce7;
+  --amber:#92400e;--amber-l:#fef3c7;
+  --red:#991b1b;--red-l:#fee2e2;
+  --purple:#5b21b6;--purple-l:#ede9fe;
+  --teal:#0f766e;--teal-l:#ccfbf1;
+  --r:8px;--r-lg:12px;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --serif:'Georgia','Times New Roman',serif;
+  --sh:0 1px 4px rgba(0,0,0,0.07),0 2px 12px rgba(0,0,0,0.05);
+  --sh-lg:0 4px 24px rgba(0,0,0,0.10),0 1px 4px rgba(0,0,0,0.06);
+}
+body{font-family:var(--sans);background:var(--s2);color:var(--ink);min-height:100vh;font-size:14px;}
+
+/* ═══════════════════════════════════════════════
+   SHELL LAYOUT
+═══════════════════════════════════════════════ */
+.shell{display:flex;min-height:100vh;}
+/* Sidebar */
+.sidebar{
+  width:220px;min-width:220px;background:var(--navy);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  box-shadow:2px 0 12px rgba(0,0,0,0.15);z-index:20;
+}
+.sb-logo{padding:20px 16px 15px;border-bottom:1px solid rgba(255,255,255,0.1);}
+.sb-logo-mark{display:flex;align-items:center;gap:8px;}
+.sb-logo-icon{width:32px;height:32px;background:var(--navy3);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.sb-logo-name{font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
+.sb-logo-sub{font-size:9.5px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1.2px;margin-top:3px;}
+.sb-nav{flex:1;padding:12px 0;overflow-y:auto;}
+.sb-section{font-size:9px;text-transform:uppercase;letter-spacing:1.3px;color:rgba(255,255,255,0.32);padding:10px 16px 4px;}
+.ni{
+  display:flex;align-items:center;gap:10px;padding:9px 16px;
+  cursor:pointer;font-size:12.5px;color:rgba(255,255,255,0.68);
+  border-left:3px solid transparent;transition:all .13s;position:relative;
+}
+.ni:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.ni.active{background:rgba(255,255,255,0.14);color:#fff;border-left-color:#60a5fa;}
+.ni-icon{width:16px;text-align:center;font-size:15px;flex-shrink:0;}
+.ni-badge{margin-left:auto;background:rgba(255,255,255,0.18);color:#fff;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600;}
+.sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.08);}
+.sb-footer-text{font-size:10px;color:rgba(255,255,255,0.3);line-height:1.6;}
+
+/* Main area */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 24px;height:52px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:10;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-size:14px;font-weight:700;color:var(--ink);}
+.topbar-sub{font-size:11.5px;color:var(--ink3);}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+
+/* Tab bar */
+.tab-bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 24px;display:flex;gap:0;overflow-x:auto;
+}
+.tab-bar::-webkit-scrollbar{height:2px;}
+.tab-item-locked{color:var(--ink4)!important;cursor:not-allowed!important;opacity:0.5;}
+.tab-item-locked:hover{color:var(--ink4)!important;background:transparent!important;}
+.tab-item{
+  display:flex;align-items:center;gap:7px;padding:13px 18px 11px;
+  cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink3);
+  border-bottom:2px solid transparent;white-space:nowrap;
+  transition:all .13s;margin-bottom:-1px;
+}
+.tab-item:hover{color:var(--ink);background:var(--s2);}
+.tab-item.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-icon{font-size:14px;}
+
+/* Content */
+.content{flex:1;overflow-y:auto;padding:24px;}
+
+/* ═══════════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════════ */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ═══════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:16px;}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.card-head h3{font-size:13px;font-weight:700;color:var(--ink);}
+.card-head .sub{font-size:11px;color:var(--ink3);margin-left:auto;}
+.card-body{padding:18px;}
+.sec-ic{width:26px;height:26px;border-radius:6px;background:var(--accent-l);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+
+/* ═══════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════ */
+.grid{display:grid;gap:13px;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:1fr 1fr 1fr;}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.g5{grid-template-columns:1fr 1fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:0.4px;}
+.field input,.field select,.field textarea{
+  font-family:var(--sans);font-size:13px;padding:7px 10px;
+  border:1px solid var(--border);border-radius:6px;background:var(--surface);
+  color:var(--ink);outline:none;transition:border-color .12s,box-shadow .12s;width:100%;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,176,0.1);}
+.field input[readonly]{background:var(--s2);color:var(--ink2);cursor:default;}
+.field textarea{resize:vertical;min-height:60px;line-height:1.5;}
+.field .hint{font-size:10.5px;color:var(--ink3);margin-top:2px;}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;outline:none;transition:all .13s;white-space:nowrap;font-family:var(--sans);}
+.btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:#1d4ed8;}
+.btn-secondary{background:var(--surface);color:var(--ink2);border:1px solid var(--border);} .btn-secondary:hover{background:var(--s2);}
+.btn-success{background:var(--green);color:#fff;} .btn-success:hover{background:#14532d;}
+.btn-danger{background:var(--red);color:#fff;} .btn-danger:hover{background:#7f1d1d;}
+.btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--border);} .btn-ghost:hover{background:var(--s2);color:var(--ink);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.btn-lg{padding:10px 22px;font-size:14px;}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px;align-items:center;}
+
+/* ═══════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.b-blue{background:var(--accent-l);color:var(--accent);}
+.b-green{background:var(--green-l);color:var(--green);}
+.b-amber{background:var(--amber-l);color:var(--amber);}
+.b-red{background:var(--red-l);color:var(--red);}
+.b-purple{background:var(--purple-l);color:var(--purple);}
+.b-teal{background:var(--teal-l);color:var(--teal);}
+.b-gray{background:var(--s3);color:var(--ink2);}
+
+/* ═══════════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════════ */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--s2);padding:9px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--ink);}
+.tbl tbody tr:hover{background:var(--s2);}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl .nr{text-align:right;} .tbl .nc{text-align:center;}
+
+/* Items entry table */
+.iw{overflow-x:auto;}
+.itable{width:100%;border-collapse:collapse;font-size:12.5px;min-width:960px;}
+.itable th{background:var(--s2);padding:7px 8px;text-align:left;font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid var(--border);}
+.itable td{padding:4px 4px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.itable td input,.itable td select{font-family:var(--sans);font-size:12.5px;padding:5px 7px;border:1px solid var(--border);border-radius:5px;width:100%;background:var(--surface);color:var(--ink);outline:none;transition:border-color .12s;}
+.itable td input:focus{border-color:var(--accent);}
+.itable td input[readonly]{background:var(--s2);color:var(--ink2);border-color:transparent;}
+.itable tr:last-child td{border-bottom:none;}
+.ic-btn{width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink3);transition:all .12s;}
+.ic-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* ═══════════════════════════════════════════════
+   BUYER TABS
+═══════════════════════════════════════════════ */
+.buyer-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;}
+.btab{padding:8px 16px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .13s;}
+.btab:hover{color:var(--ink);}
+.btab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.bpane{display:none;} .bpane.active{display:block;}
+
+/* ═══════════════════════════════════════════════
+   DOC SELECTOR
+═══════════════════════════════════════════════ */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:18px;}
+.doc-card{border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;background:var(--surface);transition:all .13s;user-select:none;}
+.doc-card:hover{border-color:var(--accent);background:var(--accent-l);}
+.doc-card.selected{border-color:var(--accent);background:var(--accent-l);}
+.doc-card.selected .dct{color:var(--accent);}
+.dc-ic{font-size:20px;margin-bottom:5px;} .dct{font-size:12.5px;font-weight:700;color:var(--ink);} .dcd{font-size:10.5px;color:var(--ink3);margin-top:1px;}
+
+/* ═══════════════════════════════════════════════
+   SUMMARY CARDS (metrics)
+═══════════════════════════════════════════════ */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
+.metric-lbl{font-size:11px;color:var(--ink3);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;}
+.metric-val{font-size:22px;font-weight:800;color:var(--ink);line-height:1.1;}
+.metric-sub{font-size:11px;color:var(--ink3);margin-top:3px;}
+.metric-icon{float:right;font-size:22px;opacity:0.5;margin-top:-2px;}
+
+/* ═══════════════════════════════════════════════
+   DOCUMENT PREVIEW
+═══════════════════════════════════════════════ */
+.prev-wrap{background:var(--s3);border-radius:var(--r);padding:20px;}
+.doc-frame{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-lg);overflow:hidden;}
+.prev-tb{background:var(--s2);padding:9px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink3);}
+.prev-tb-left{display:flex;align-items:center;gap:10px;}
+.doc-body{position:relative;padding:30px 38px 30px 47px;font-family:var(--serif);font-size:11.5px;color:#111;min-height:560px;overflow:hidden;}
+
+/* ═══════════════════════════════════════════════
+   GENERATED DOCUMENT INTERNALS
+═══════════════════════════════════════════════ */
+.dh-co{text-align:right;margin-bottom:13px;}
+.dh-name{font-size:20px;font-weight:bold;color:#1a4d8f;}
+.dh-sub{font-size:9.5px;color:#555;}
+.dtitle{text-align:center;font-size:13px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;border-top:2px solid #111;border-bottom:2px solid #111;padding:4px 0;margin:10px 0;}
+.dt{width:100%;border-collapse:collapse;font-size:10.5px;margin:7px 0;}
+.dt th{background:#f0f0f0;border:1px solid #999;padding:4px 6px;text-align:center;font-size:9.5px;font-weight:bold;text-transform:uppercase;}
+.dt td{border:1px solid #bbb;padding:4px 6px;vertical-align:middle;}
+.dt .nr{text-align:right;} .dt .nc{text-align:center;}
+.dt .tot td{font-weight:bold;background:#f5f5f5;border-top:1.5px solid #555;}
+.dc-lbl{font-size:9px;font-weight:bold;color:#555;text-transform:uppercase;display:block;margin-bottom:1px;}
+.dc-vlg{font-size:13px;font-weight:bold;}
+.d-words{margin-top:9px;font-style:italic;font-size:10.5px;border:1px solid #ccc;padding:5px 8px;background:#fafafa;}
+.d-decl{margin-top:11px;font-size:9px;color:#444;line-height:1.55;}
+.d-decl p{margin-bottom:3px;}
+.d-bs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;font-size:9.5px;}
+.d-sig{border:1px solid #ccc;padding:8px;text-align:center;min-height:64px;display:flex;flex-direction:column;justify-content:flex-end;}
+.d-sig-lbl{font-size:9.5px;font-weight:bold;border-top:1px solid #888;padding-top:3px;margin-top:6px;}
+.d-foot{margin-top:13px;text-align:center;font-size:8.5px;color:#888;border-top:1px solid #ddd;padding-top:7px;line-height:1.7;}
+
+/* ═══════════════════════════════════════════════
+   BUYER DIRECTORY
+═══════════════════════════════════════════════ */
+.buyer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh);transition:box-shadow .13s;}
+.buyer-card:hover{box-shadow:var(--sh-lg);}
+.buyer-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent-l);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+.buyer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+
+/* ═══════════════════════════════════════════════
+   SHIPMENT TRACKER
+═══════════════════════════════════════════════ */
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;}
+.status-pending{background:#f59e0b;}
+.status-shipped{background:#3b82f6;}
+.status-delivered{background:#10b981;}
+.status-cancelled{background:#ef4444;}
+
+/* ═══════════════════════════════════════════════
+   FINANCIAL DASHBOARD
+═══════════════════════════════════════════════ */
+.chart-bar-wrap{display:flex;align-items:flex-end;gap:6px;height:140px;padding:8px 0;}
+.chart-bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px;}
+.chart-bar{background:var(--accent);border-radius:4px 4px 0 0;min-height:4px;width:100%;transition:height .4s;}
+.chart-bar-lbl{font-size:10px;color:var(--ink3);text-align:center;white-space:nowrap;}
+.chart-bar-val{font-size:10px;font-weight:600;color:var(--accent);text-align:center;}
+
+/* ═══════════════════════════════════════════════
+   LOADER
+═══════════════════════════════════════════════ */
+.loader{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:999;align-items:center;justify-content:center;}
+.loader.show{display:flex;}
+.lbox{background:#fff;border-radius:12px;padding:28px 36px;text-align:center;box-shadow:var(--sh-lg);}
+.spin{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .75s linear infinite;margin:0 auto 10px;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.ltxt{font-size:13.5px;color:var(--ink2);}
+
+/* ═══════════════════════════════════════════════
+   MISC
+═══════════════════════════════════════════════ */
+.alert{padding:10px 14px;border-radius:var(--r);font-size:12.5px;margin-bottom:12px;display:none;}
+.alert.show{display:block;}
+.a-err{background:var(--red-l);color:var(--red);border:1px solid #fca5a5;}
+.a-ok{background:var(--green-l);color:var(--green);border:1px solid #86efac;}
+.a-info{background:var(--accent-l);color:var(--accent);border:1px solid #93c5fd;}
+.pg-head{margin-bottom:20px;}
+.pg-head h2{font-size:20px;font-weight:800;color:var(--ink);}
+.pg-head p{font-size:13px;color:var(--ink3);margin-top:3px;}
+hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.empty{text-align:center;padding:48px 24px;color:var(--ink3);}
+.empty-ic{font-size:40px;margin-bottom:10px;}
+.empty p{font-size:13.5px;}
+.pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;background:var(--accent-l);color:var(--accent);border:1px solid #c0d0e8;cursor:pointer;transition:all .12s;}
+.pill.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-lg);width:90%;max-width:560px;max-height:90vh;overflow-y:auto;}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3);padding:2px 6px;border-radius:4px;}
+.modal-close:hover{background:var(--s2);}
+.modal-body{padding:20px;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:9px;justify-content:flex-end;}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:600;background:var(--s3);color:var(--ink2);}
+.divider-label{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:0.6px;}
+.divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+@media print{
+  /* Hide all UI chrome */
+  .no-print,.sidebar,.topbar,.tab-bar,.btn-row,.prev-tb,.doc-grid,.pg-head,
+  .buyer-tabs,.pill-row,.metric-grid,.sum-strip,.pill-row-label,
+  #buyer-pills,.doc-grid,#doc-grid,
+  .pill-row-wrap{display:none!important;}
+  /* Hide the "Buyer / Invoice Variant" section label above pills */
+  #docs-content>div:first-child{display:none!important;}
+  .doc-frame{box-shadow:none;border:none;}
+  body{background:#fff;}
+  .prev-wrap{padding:0;background:transparent;}
+  .content{padding:0;}
+  .panel{display:block!important;}
+  #panel-invoice{display:block!important;}
+  #ipanel-docs{display:block!important;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+@page{
+  margin:1.5cm 1cm 2cm 1.3cm;
+}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div id="loader" class="loader"><div class="lbox"><div class="spin"></div><div class="ltxt" id="ltxt">Processing…</div></div></div>
+
+<!-- BUYER MODAL -->
+<div id="buyer-modal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-head"><h3 id="bm-title">Add Buyer</h3><button class="modal-close" onclick="closeBuyerModal()">×</button></div>
+    <div class="modal-body">
+      <div class="grid g2" style="gap:12px;">
+        <div class="field" style="grid-column:1/-1"><label>Company Name *</label><input id="bm-name" placeholder="e.g. AMOS LLC FZE TRADING"></div>
+        <div class="field"><label>Address Line 1</label><input id="bm-a1" placeholder="Building / Zone / Street"></div>
+        <div class="field"><label>Address Line 2</label><input id="bm-a2" placeholder="City, Country / PO Box"></div>
+        <div class="field"><label>TRN / Tax ID</label><input id="bm-trn"></div>
+        <div class="field"><label>Contact No.</label><input id="bm-con"></div>
+        <div class="field"><label>Country</label><input id="bm-cy" value="U.A.E."></div>
+        <div class="field"><label>Default Payment Terms</label><input id="bm-pay" value="After Inspection"></div>
+        <div class="field"><label>Notes</label><input id="bm-notes" placeholder="Optional notes"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeBuyerModal()">Cancel</button>
+      <button class="btn btn-success" onclick="saveBuyerModal()">Save Buyer</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+<!-- ════════ SIDEBAR ════════ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">
+      <div class="sb-logo-icon">📦</div>
+      <div><div class="sb-logo-name">Logica</div></div>
+    </div>
+    <div class="sb-logo-sub">Export Operations</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Operations</div>
+    <div class="ni active" id="nav-invoice" onclick="switchTab('invoice')"><span class="ni-icon">🧾</span>Shipment Lodging</div>
+    <div class="ni" id="nav-tracker" onclick="switchTab('tracker')"><span class="ni-icon">✈️</span>Shipment Tracker<span class="ni-badge" id="nb-tracker">0</span></div>
+    <div class="sb-section">Management</div>
+    <div class="ni" id="nav-inventory" onclick="switchTab('inventory')"><span class="ni-icon">📦</span>Inventory Management</div>
+    <div class="ni" id="nav-buyers" onclick="switchTab('buyers')"><span class="ni-icon">🏢</span>Buyer Directory<span class="ni-badge" id="nb-buyers">0</span></div>
+    <div class="ni" id="nav-archive" onclick="switchTab('archive')"><span class="ni-icon">🗄️</span>Document Archive<span class="ni-badge" id="nb-archive">0</span></div>
+    <div class="ni" id="nav-finance" onclick="switchTab('finance')"><span class="ni-icon">📊</span>Financial Dashboard</div>
+    <div class="sb-section">System</div>
+    <div class="ni" id="nav-settings" onclick="switchTab('settings')"><span class="ni-icon">⚙️</span>Company Settings</div>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-footer-text">Logica Infoway Ltd.<br>Export Operations Portal v2</div>
+  </div>
+</aside>
+
+<!-- ════════ MAIN ════════ -->
+<div class="main">
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-title" id="tb-title">Shipment Lodging</span>
+    <span class="topbar-sub" id="tb-sub"></span>
+  </div>
+  <div class="topbar-right">
+    <span class="badge b-blue" id="inv-badge" style="display:none"></span>
+    <button class="btn btn-primary" id="topbar-action" onclick="generateAll()">⚡ Generate Documents</button>
+  </div>
+</div>
+
+
+
+<div class="content">
+<!-- ============================================================
+     TAB 1: INVOICE GENERATION
+============================================================ -->
+<div class="panel active" id="panel-invoice">
+
+  <!-- Invoice sub-tab bar — inside panel so it only shows for this tab -->
+  <div class="tab-bar" id="tab-bar-invoice">
+    <div class="tab-item active" id="itab-form" onclick="switchITab('form')"><span class="tab-icon">📝</span>Entry Form</div>
+    <div class="tab-item tab-item-locked" id="itab-docs" onclick="switchITabGuarded('docs')"><span class="tab-icon">📄</span>Documents</div>
+    <div class="tab-item tab-item-locked" id="itab-insmail" onclick="switchITabGuarded('insmail')"><span class="tab-icon">📧</span>Insurance Mail</div>
+  </div>
+
+  <!-- SUB-PANEL: FORM -->
+  <div id="ipanel-form" class="active" style="display:block;padding-top:18px;">
+    <div id="form-alert" class="alert a-err"></div>
+
+    <!-- Reference -->
+    <div class="card">
+      <div class="card-head"><div class="sec-ic">🔢</div><h3>Invoice Reference</h3></div>
+      <div class="card-body"><div class="grid g4">
+        <div class="field"><label>Financial Year</label><select id="fy"><option>25-26</option><option>26-27</option><option>27-28</option></select></div>
+        <div class="field"><label>Shipment No.</label><input type="number" id="sno" value="65" min="1"></div>
+        <div class="field"><label>Invoice No. (auto)</label><input id="ino" readonly></div>
+        <div class="field"><label>PO No. (auto)</label><input id="pno" readonly></div>
+        <div class="field"><label>Invoice Date</label><input type="date" id="idate"></div>
+        <div class="field"><label>PO Date</label><input type="date" id="pdate"></div>
+        <div class="field">
+          <label>Exchange Rate &#8377;/$ <span id="xrate-src"></span></label>
+          <div style="display:flex;gap:6px;">
+            <input type="number" id="xrate" value="92.55" step="0.01" style="flex:1;">
+            <button id="xrate-btn" onclick="fetchDGFTRate()" class="btn btn-secondary btn-sm" style="flex-shrink:0;">Refresh</button>
+          </div>
+          <div id="xrate-hint" class="hint">DGFT Customs USD <strong>Export Rate</strong> — last updated 20-Mar-2026. Updates fortnightly. Click Refresh to check DGFT. <a href="https://www.dgft.gov.in/CP/?opt=currency-list-exchange-rates" target="_blank" style="color:var(--accent);">Open DGFT &#8599;</a></div>
+        </div>
+        <div class="field"><label>IGST Rate %</label><input type="number" id="igst" value="18" readonly style="background:var(--s2);color:var(--ink2);cursor:default;"><div class="hint">Fixed at 18% per GST</div></div>
+      </div></div>
+    </div>
+
+    <!-- Consignee -->
+    <div class="card">
+      <div class="card-head"><div class="sec-ic">🚢</div><h3>Consignee (Freight Forwarder)</h3><span class="sub">The logistics party handling shipment</span></div>
+      <div class="card-body"><div class="grid g3">
+        <div class="field" style="grid-column:1/-1"><label>Company Name</label><input id="cn" value="CROWN LOGISTICS FZCO"></div>
+        <div class="field"><label>Address Line 1</label><input id="ca1" value="G-12 Warehouse, Dubai Airport Free Zone"></div>
+        <div class="field"><label>Address Line 2</label><input id="ca2" value="Po Box: 54620 Dubai, U.A.E."></div>
+        <div class="field"><label>TRN / Tax ID</label><input id="ctrn" value="100433151600003"></div>
+        <div class="field"><label>Contact No.</label><input id="cc" value="+97142386222"></div>
+        <div class="field"><label>Country</label><input id="ccy" value="U.A.E."></div>
+        <div class="field"><label>Per-Carriage</label><input id="pcar" value="N/A"></div>
+      </div></div>
+    </div>
+
+    <!-- Buyers -->
+    <div class="card">
+      <div class="card-head"><div class="sec-ic">🏢</div><h3>Buyers / End Clients</h3><span class="sub">Each buyer generates a separate sub-invoice</span></div>
+      <div class="card-body">
+        <div class="buyer-tabs" id="btabs"></div>
+        <div id="bpanes"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary btn-sm" onclick="addBuyer()">＋ Add Another Buyer</button>
+          <button class="btn btn-ghost btn-sm" onclick="openBuyerPickerForEntry()">📋 Load from Directory</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Route -->
+    <div class="card">
+      <div class="card-head"><div class="sec-ic">✈️</div><h3>Shipment Route & Terms</h3></div>
+      <div class="card-body"><div class="grid g4">
+        <div class="field"><label>Mode</label><select id="mode"><option>BY AIR</option><option>BY SEA</option><option>BY ROAD</option></select></div>
+        <div class="field"><label>Port of Loading</label><input id="pol" value="NEW DELHI"></div>
+        <div class="field"><label>Port of Discharge</label><input id="pod" value="DUBAI (U.A.E.)"></div>
+        <div class="field"><label>Final Destination</label><input id="dest" value="DUBAI (U.A.E.)"></div>
+        <div class="field"><label>Country of Origin</label><input id="coo" value="INDIA"></div>
+        <div class="field"><label>Delivery Term</label><input id="dterm" value="CIF, Dubai"></div>
+        <div class="field"><label>Default Payment Terms</label><input id="pterm" value="After Inspection"></div>
+        <div class="field"><label>Gross Weight (kg)</label><input type="number" id="gweight" placeholder="e.g. 450"></div>
+      </div></div>
+    </div>
+
+    <!-- Items -->
+    <div class="card">
+      <div class="card-head"><div class="sec-ic">📦</div><h3>Line Items</h3></div>
+      <div class="card-body">
+        <div class="iw"><table class="itable"><thead><tr>
+          <th style="min-width:290px">Description of Goods</th>
+          <th style="min-width:95px">HSN Code</th>
+          <th style="min-width:85px">Qty (Pcs)</th>
+          <th style="min-width:110px">Unit Price $</th>
+          <th style="min-width:115px">Amount USD</th>
+          <th style="min-width:120px">Amount INR</th>
+          <th style="min-width:34px"></th>
+        </tr></thead><tbody id="ibody"></tbody></table></div>
+        <div style="margin-top:10px;"><button class="btn btn-secondary btn-sm" onclick="addItem()">＋ Add Row</button></div>
+      </div>
+    </div>
+
+    <!-- Remarks & insurance hardcoded - not shown in form -->
+    <input type="hidden" id="rmk" value="# All standard accessories as original pack&#10;# Asian Model only in standard packing">
+    <input type="hidden" id="insp" value="110">
+
+    <!-- Packing List -->
+    <div class="card">
+      <div class="card-head"><div class="sec-ic">📋</div><h3>Packing List</h3><span class="sub">Box-wise breakdown for packing list document</span></div>
+      <div class="card-body">
+        <div class="iw"><table class="itable"><thead><tr>
+          <th style="min-width:90px">Box No.</th>
+          <th style="min-width:90px">No. of Boxes</th>
+          <th style="min-width:280px">Description</th>
+          <th style="min-width:110px">Pcs Each Box</th>
+          <th style="min-width:100px">Total Pcs</th>
+          <th style="min-width:34px"></th>
+        </tr></thead><tbody id="plbody"></tbody></table></div>
+        <div style="margin-top:10px;display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="addPackRow()">＋ Add Row</button>
+          <span style="color:var(--ink4);font-size:11px;">or</span>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer;position:relative;overflow:hidden;">
+            📁 Import from Excel
+            <input type="file" id="pack-file-input" accept=".xlsx,.xls,.csv" onchange="handlePackFileUpload(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+          </label>
+          <span id="pack-file-badge" style="display:none;font-size:11px;color:var(--green);font-weight:600;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- IMEI / Serial Data (shown after Excel import) -->
+    <div class="card" id="imei-card" style="display:none;">
+      <div class="card-head"><div class="sec-ic" style="background:var(--teal-l);color:var(--teal);">🔢</div><h3>Serial / IMEI Data</h3><span class="sub">Imported from logistics Excel — view in Serial/IMEI document</span></div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div id="imei-stats" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2);"></div>
+          <button class="btn btn-ghost btn-sm" onclick="clearImeiData()">✕ Remove IMEI Data</button>
+        </div>
+        <div class="iw" style="max-height:300px;overflow-y:auto;"><table class="itable"><thead><tr>
+          <th style="min-width:40px">#</th>
+          <th style="min-width:70px">Box</th>
+          <th style="min-width:160px">IMEI / Serial No.</th>
+          <th style="min-width:140px">Model</th>
+          <th style="min-width:90px">Color</th>
+          <th style="min-width:120px">Party</th>
+          <th style="min-width:110px">Bill No.</th>
+        </tr></thead><tbody id="imei-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary btn-lg" onclick="generateAll()">⚡ Generate All Documents</button>
+      <button class="btn btn-success" onclick="saveShipment()">💾 Save to Archive</button>
+      <button class="btn btn-secondary" onclick="resetForm()">↺ Reset Form</button>
+    </div>
+  </div>
+
+  <!-- SUB-PANEL: DOCUMENTS -->
+  <div id="ipanel-docs" style="display:none;padding-top:18px;">
+    <div id="no-docs" class="empty"><div class="empty-ic">📄</div><p>Generate documents first via the <strong>Entry Form</strong> tab.</p></div>
+    <div id="docs-content" style="display:none">
+      <div class="no-print" style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;">Buyer / Invoice Variant</div>
+        <div class="pill-row" id="buyer-pills"></div>
+      </div>
+      <div class="doc-grid" id="doc-grid">
+        <div class="doc-card selected" onclick="selDoc('ci')" id="dc-ci"><div class="dc-ic">🧾</div><div class="dct">Commercial Invoice</div><div class="dcd">Full export invoice</div></div>
+        <div class="doc-card" onclick="selDoc('pl')" id="dc-pl"><div class="dc-ic">📦</div><div class="dct">Packing List</div><div class="dcd">Box-wise breakdown</div></div>
+        <div class="doc-card" onclick="selDoc('po')" id="dc-po"><div class="dc-ic">📋</div><div class="dct">Purchase Order</div><div class="dcd">Buyer stamp &amp; sign only</div></div>
+        <div class="doc-card" onclick="selDoc('sn')" id="dc-sn"><div class="dc-ic">🔢</div><div class="dct">Serial / IMEI Nos.</div><div class="dcd">Box-wise IMEI register</div></div>
+      </div>
+      <div class="prev-wrap"><div class="doc-frame">
+        <div class="prev-tb">
+          <div class="prev-tb-left"><span id="doc-lbl">Commercial Invoice</span></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="printDoc()">🖨 Print</button>
+            <button class="btn btn-secondary btn-sm" onclick="saveShipment()">💾 Save</button>
+          </div>
+        </div>
+        <div class="doc-body" id="doc-body"></div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- SUB-PANEL: INSURANCE MAIL -->
+  <div id="ipanel-insmail" style="display:none;padding-top:18px;">
+     <!-- Step 1: Airway Bill -->
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#fef3c7;color:#92400e;font-weight:700;">1</div>
+        <h3>Airway Bill</h3>
+        <span class="sub">Enter the 11-digit AWB number (found top-left of your Airway Bill)</span>
+      </div>
+      <div class="card-body">
+        <div class="grid g2" style="align-items:start;">
+          <div class="field">
+            <label>AWB Number</label>
+            <input type="text" id="awb-number" placeholder="e.g. 176-12345678" oninput="onAWBInput(this.value)">
+          </div>
+          <div class="field">
+            <label>Carrier/Airline</label>
+            <input type="text" id="ins-carrier" placeholder="e.g. IndiGo Cargo, Air India" oninput="rebuildInsMail()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Mail Details -->
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#fef3c7;color:#92400e;font-weight:700;">2</div>
+        <h3>Shipment Details</h3>
+        <span class="sub">Auto-filled from invoice — edit if needed</span>
+      </div>
+      <div class="card-body">
+        <div id="no-shipment-warn" style="background:var(--amber-l);border:1px solid #fcd34d;border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none;">
+          ⚠ Generate documents from the <strong>Entry Form</strong> first so invoice details are available.
+        </div>
+        <div class="grid g3">
+          <div class="field">
+            <label>Invoice Number</label>
+            <input type="text" id="ins-inv-no" oninput="rebuildInsMail()">
+          </div>
+          <div class="field">
+            <label>Invoice Date</label>
+            <input type="date" id="ins-inv-date" oninput="rebuildInsMail()">
+          </div>
+          <div class="field">
+            <label>CIF Value (USD)</label>
+            <input type="text" id="ins-cif" oninput="rebuildInsMail()">
+          </div>
+          <div class="field">
+            <label>Consignee</label>
+            <input type="text" id="ins-consignee" oninput="rebuildInsMail()">
+          </div>
+          <div class="field">
+            <label>Destination</label>
+            <input type="text" id="ins-dest" oninput="rebuildInsMail()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Drafted Mail -->
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#fef3c7;color:#92400e;font-weight:700;">3</div>
+        <h3>Insurance Mail Draft</h3>
+        <span class="sub">Review and edit before sending</span>
+      </div>
+      <div class="card-body">
+        <div class="field" style="margin-bottom:12px;">
+          <label>Subject</label>
+          <input type="text" id="ins-subject" style="font-weight:600;">
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label>Mail Body <span style="font-weight:400;color:var(--ink3);">(editable)</span></label>
+          <textarea id="ins-body" rows="18" style="font-family:var(--sans);font-size:13px;line-height:1.7;resize:vertical;"></textarea>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:var(--ink2);">
+          📎 <strong>What happens when you click the button:</strong>
+          <ol style="margin:6px 0 0 18px;font-size:12px;line-height:1.9;">
+            <li>Commercial Invoice downloads automatically to your Downloads folder</li>
+            <li>Mail body is copied to your clipboard</li>
+            <li>Gmail opens with subject and body pre-filled</li>
+            <li>In Gmail: click the 📎 clip icon → attach the downloaded invoice file</li>
+          </ol>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="sendViaGmail()">📤 Open Gmail &amp; Compose</button>
+          <button class="btn btn-secondary" onclick="copyInsMail()">📋 Copy Mail Body</button>
+          <button class="btn btn-ghost" onclick="rebuildInsMail()">↻ Refresh Draft</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /ipanel-insmail -->
+
+</div><!-- /panel-invoice -->
+
+<!-- ============================================================
+     TAB 2: SHIPMENT TRACKER
+============================================================ -->
+<div class="panel" id="panel-tracker">
+  <div class="pg-head"><h2>Shipment Tracker</h2><p>Track AWB numbers, carriers, and delivery status for all shipments.</p></div>
+  <div class="btn-row" style="margin-bottom:16px;">
+    <button class="btn btn-primary" onclick="openTrackerModal()">＋ Add Shipment Entry</button>
+  </div>
+  <div class="card">
+    <div class="card-body" style="padding:0">
+      <table class="tbl" id="tracker-table">
+        <thead><tr>
+          <th>Invoice No.</th><th>Buyer</th><th>AWB No.</th><th>Carrier</th>
+          <th>Dispatch Date</th><th>Dest.</th><th class="nr">Value (USD)</th>
+          <th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="tracker-body"></tbody>
+      </table>
+      <div id="tracker-empty" class="empty" style="display:none"><div class="empty-ic">✈️</div><p>No shipments tracked yet. Add one above or save from Shipment Lodging.</p></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==========================
+     TAB: INVENTORY MANAGEMENT
+========================== -->
+<div class="panel" id="panel-inventory">
+
+  <!-- Inventory sub-tab bar -->
+  <div class="tab-bar" id="inv-tab-bar">
+    <div class="tab-item active" id="inv-tab-purchase" onclick="invSwitchTab('purchase')"><span class="tab-icon">🛒</span>Purchase Entries</div>
+    <div class="tab-item" id="inv-tab-sales" onclick="invSwitchTab('sales')"><span class="tab-icon">💰</span>Sales Entries</div>
+    <div class="tab-item" id="inv-tab-stock" onclick="invSwitchTab('stock')"><span class="tab-icon">📊</span>Stock View</div>
+    <div class="tab-item" id="inv-tab-transfer" onclick="invSwitchTab('transfer')"><span class="tab-icon">✈️</span>Shipment Transfer</div>
+  </div>
+
+  <!-- ── PURCHASE ENTRIES ── -->
+  <div id="inv-panel-purchase" style="padding-top:18px;">
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#dcfce7;color:#166534;">🛒</div>
+        <h3>New Purchase Entry</h3>
+        <span class="sub">Add stock purchased in India — updates India state inventory</span>
+      </div>
+      <div class="card-body">
+        <div class="grid g3">
+          <div class="field">
+            <label>Purchase Date</label>
+            <input type="date" id="inv-p-date">
+          </div>
+          <div class="field">
+            <label>Indian State</label>
+            <select id="inv-p-state">
+              <option value="">Select State</option>
+              <option>Delhi</option><option>Maharashtra</option><option>Karnataka</option>
+              <option>Tamil Nadu</option><option>Gujarat</option><option>Telangana</option>
+              <option>West Bengal</option><option>Rajasthan</option><option>Uttar Pradesh</option>
+              <option>Haryana</option><option>Punjab</option><option>Madhya Pradesh</option>
+              <option>Andhra Pradesh</option><option>Kerala</option><option>Odisha</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Supplier Name</label>
+            <input type="text" id="inv-p-supplier" placeholder="Supplier / Vendor name">
+          </div>
+          <div class="field">
+            <label>Product / Model</label>
+            <input type="text" id="inv-p-product" placeholder="e.g. Samsung Galaxy A15">
+          </div>
+          <div class="field">
+            <label>HSN Code</label>
+            <input type="text" id="inv-p-hsn" placeholder="e.g. 85171200">
+          </div>
+          <div class="field">
+            <label>Quantity (Pcs)</label>
+            <input type="number" id="inv-p-qty" min="1" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Unit Cost (₹)</label>
+            <input type="number" id="inv-p-cost" step="0.01" placeholder="0.00">
+          </div>
+          <div class="field">
+            <label>Total Value (₹)</label>
+            <input type="number" id="inv-p-total" readonly style="background:var(--s2);color:var(--ink2);">
+          </div>
+          <div class="field">
+            <label>Invoice / Bill No.</label>
+            <input type="text" id="inv-p-billno" placeholder="Supplier bill number">
+          </div>
+          <div class="field" style="grid-column:span 2;">
+            <label>Remarks</label>
+            <input type="text" id="inv-p-remarks" placeholder="Optional notes">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn btn-primary" onclick="invAddPurchase()">＋ Add Purchase Entry</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#dcfce7;color:#166534;">📋</div>
+        <h3>Purchase History</h3>
+        <span class="sub">All purchase entries — India inventory inflows</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div style="overflow-x:auto;">
+          <table class="itable" id="inv-purchase-table">
+            <thead><tr>
+              <th>Date</th><th>State</th><th>Supplier</th><th>Product</th>
+              <th>HSN</th><th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Unit Cost ₹</th>
+              <th style="text-align:right;">Total ₹</th>
+              <th>Bill No.</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="inv-purchase-body">
+              <tr><td colspan="11" style="text-align:center;color:var(--ink3);padding:24px;">No purchase entries yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SALES ENTRIES ── -->
+  <div id="inv-panel-sales" style="display:none;padding-top:18px;">
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#fef3c7;color:#92400e;">💰</div>
+        <h3>New Sales Entry</h3>
+        <span class="sub">Record payment received from buyer — removes stock from destination inventory</span>
+      </div>
+      <div class="card-body">
+        <div class="grid g3">
+          <div class="field">
+            <label>Sale Date</label>
+            <input type="date" id="inv-s-date">
+          </div>
+          <div class="field">
+            <label>Buyer Name</label>
+            <input type="text" id="inv-s-buyer" placeholder="Buyer / Customer name">
+          </div>
+          <div class="field">
+            <label>Country</label>
+            <input type="text" id="inv-s-country" placeholder="e.g. UAE, Kenya, Nepal">
+          </div>
+          <div class="field">
+            <label>Product / Model</label>
+            <input type="text" id="inv-s-product" placeholder="e.g. Samsung Galaxy A15">
+          </div>
+          <div class="field">
+            <label>Quantity (Pcs)</label>
+            <input type="number" id="inv-s-qty" min="1" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Unit Price (USD)</label>
+            <input type="number" id="inv-s-price" step="0.01" placeholder="0.00">
+          </div>
+          <div class="field">
+            <label>Total Value (USD)</label>
+            <input type="number" id="inv-s-total" readonly style="background:var(--s2);color:var(--ink2);">
+          </div>
+          <div class="field">
+            <label>Invoice No.</label>
+            <input type="text" id="inv-s-invno" placeholder="Export invoice no.">
+          </div>
+          <div class="field">
+            <label>Payment Mode</label>
+            <select id="inv-s-paymode">
+              <option>TT / Wire Transfer</option>
+              <option>LC (Letter of Credit)</option>
+              <option>Cash</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Stock Source</label>
+            <select id="inv-s-source">
+              <option value="destination">Destination Country Stock</option>
+              <option value="india">India Stock (direct)</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:span 2;">
+            <label>Remarks</label>
+            <input type="text" id="inv-s-remarks" placeholder="Optional notes">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn btn-primary" onclick="invAddSale()">＋ Add Sale Entry</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#fef3c7;color:#92400e;">📋</div>
+        <h3>Sales History</h3>
+        <span class="sub">All sales — buyer payments received</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div style="overflow-x:auto;">
+          <table class="itable" id="inv-sales-table">
+            <thead><tr>
+              <th>Date</th><th>Buyer</th><th>Country</th><th>Product</th>
+              <th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Unit USD</th>
+              <th style="text-align:right;">Total USD</th>
+              <th>Invoice</th><th>Payment</th><th>Source</th><th></th>
+            </tr></thead>
+            <tbody id="inv-sales-body">
+              <tr><td colspan="11" style="text-align:center;color:var(--ink3);padding:24px;">No sales entries yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STOCK VIEW ── -->
+  <div id="inv-panel-stock" style="display:none;padding-top:18px;">
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#ede9fe;color:#6d28d9;">📊</div>
+        <h3>Stock View</h3>
+        <span class="sub">Current inventory across all locations</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="invRenderStock('all')">All Locations</button>
+          <button class="btn btn-ghost btn-sm" onclick="invRenderStock('india')">India Only</button>
+          <button class="btn btn-ghost btn-sm" onclick="invRenderStock('export')">Export Countries</button>
+          <div style="flex:1;"></div>
+          <input type="text" id="inv-stock-search" placeholder="Search product…" oninput="invRenderStock('all')" style="width:200px;font-size:13px;">
+        </div>
+        <div id="inv-stock-content">
+          <div style="text-align:center;color:var(--ink3);padding:40px;">No inventory data yet. Add purchase entries and shipment transfers to build inventory.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SHIPMENT TRANSFER ── -->
+  <div id="inv-panel-transfer" style="display:none;padding-top:18px;">
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#dbeafe;color:#1d4ed8;">✈️</div>
+        <h3>New Shipment Transfer</h3>
+        <span class="sub">Record a shipment — moves stock from India to destination country</span>
+      </div>
+      <div class="card-body">
+        <div class="grid g3">
+          <div class="field">
+            <label>Shipment Date</label>
+            <input type="date" id="inv-t-date">
+          </div>
+          <div class="field">
+            <label>From (India State)</label>
+            <select id="inv-t-from-state">
+              <option value="">Select State</option>
+              <option>Delhi</option><option>Maharashtra</option><option>Karnataka</option>
+              <option>Tamil Nadu</option><option>Gujarat</option><option>Telangana</option>
+              <option>West Bengal</option><option>Rajasthan</option><option>Uttar Pradesh</option>
+              <option>Haryana</option><option>Punjab</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>To (Destination Country)</label>
+            <input type="text" id="inv-t-dest" placeholder="e.g. UAE, Kenya, Nepal">
+          </div>
+          <div class="field">
+            <label>Product / Model</label>
+            <input type="text" id="inv-t-product" placeholder="e.g. Samsung Galaxy A15">
+          </div>
+          <div class="field">
+            <label>Quantity (Pcs)</label>
+            <input type="number" id="inv-t-qty" min="1" placeholder="0">
+          </div>
+          <div class="field">
+            <label>Invoice No. (Export)</label>
+            <input type="text" id="inv-t-invno" placeholder="EX/25261300065">
+          </div>
+          <div class="field">
+            <label>AWB No.</label>
+            <input type="text" id="inv-t-awb" placeholder="e.g. 176-12345678">
+          </div>
+          <div class="field">
+            <label>Shipment Value (USD)</label>
+            <input type="number" id="inv-t-value" step="0.01" placeholder="0.00">
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="inv-t-status">
+              <option value="in-transit">In Transit</option>
+              <option value="delivered">Delivered — Awaiting Payment</option>
+              <option value="paid">Paid — Cleared</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:span 3;">
+            <label>Remarks</label>
+            <input type="text" id="inv-t-remarks" placeholder="Optional notes">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn btn-primary" onclick="invAddTransfer()">✈️ Record Shipment Transfer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-ic" style="background:#dbeafe;color:#1d4ed8;">📋</div>
+        <h3>Shipment Transfer Log</h3>
+        <span class="sub">All transfers — India → export destinations</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div style="overflow-x:auto;">
+          <table class="itable" id="inv-transfer-table">
+            <thead><tr>
+              <th>Date</th><th>From (State)</th><th>To (Country)</th><th>Product</th>
+              <th style="text-align:right;">Qty</th>
+              <th style="text-align:right;">Value USD</th>
+              <th>Invoice</th><th>AWB</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody id="inv-transfer-body">
+              <tr><td colspan="10" style="text-align:center;color:var(--ink3);padding:24px;">No transfers recorded yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panel-inventory -->
+
+<!-- ============================================================
+     TAB 3: BUYER DIRECTORY
+============================================================ -->
+<div class="panel" id="panel-buyers">
+  <div class="pg-head"><h2>Buyer Directory</h2><p>Save buyer profiles and load them instantly when creating invoices.</p></div>
+  <div class="btn-row" style="margin-bottom:18px;">
+    <button class="btn btn-primary" onclick="openBuyerModal()">＋ Add New Buyer</button>
+  </div>
+  <div id="buyers-empty" class="empty" style="display:none"><div class="empty-ic">🏢</div><p>No buyers saved yet. Add your first buyer above.</p></div>
+  <div class="buyer-grid" id="buyer-grid"></div>
+</div>
+
+<!-- ============================================================
+     TAB 4: DOCUMENT ARCHIVE
+============================================================ -->
+<div class="panel" id="panel-archive">
+  <div class="pg-head"><h2>Document Archive</h2><p>All saved shipments. Search, reprint, or load into the invoice form.</p></div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+    <input id="archive-search" placeholder="🔍  Search by invoice, buyer, product…" style="flex:1;padding:9px 13px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--sans);font-size:13px;outline:none;" oninput="filterArchive()">
+    <button class="btn btn-ghost btn-sm" onclick="clearArchiveSearch()">✕ Clear</button>
+  </div>
+  <div class="card">
+    <div class="card-body" style="padding:0">
+      <table class="tbl" id="archive-table">
+        <thead><tr>
+          <th>Invoice No.</th><th>Date</th><th>Buyer(s)</th>
+          <th>Items</th><th class="nr">Value (USD)</th>
+          <th class="nr">Taxable (INR)</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="archive-body"></tbody>
+      </table>
+      <div id="archive-empty" class="empty" style="display:none"><div class="empty-ic">🗄️</div><p>No archived shipments yet. Save from Shipment Lodging.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TAB 5: FINANCIAL DASHBOARD
+============================================================ -->
+<div class="panel" id="panel-finance">
+  <div class="pg-head"><h2>Financial Dashboard</h2><p>Aggregated export financials across all saved shipments.</p></div>
+  <div id="finance-empty" class="empty" style="display:none"><div class="empty-ic">📊</div><p>No shipment data yet. Save shipments to see financials.</p></div>
+  <div id="finance-content" style="display:none">
+    <div class="metric-grid" id="metric-grid"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-head"><div class="sec-ic">📈</div><h3>Monthly Export Value (USD)</h3></div>
+        <div class="card-body"><div class="chart-bar-wrap" id="monthly-chart"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="sec-ic">🏢</div><h3>Top Buyers by Value</h3></div>
+        <div class="card-body" id="buyer-chart"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="sec-ic">🧾</div><h3>Shipment-wise Summary</h3></div>
+      <div class="card-body" style="padding:0">
+        <table class="tbl" id="finance-table">
+          <thead><tr><th>Invoice</th><th>Date</th><th>Buyer</th><th class="nr">USD</th><th class="nr">Taxable INR</th><th class="nr">IGST INR</th><th class="nr">Invoice INR</th><th>Exchange Rate</th></tr></thead>
+          <tbody id="finance-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TAB 6: SETTINGS
+============================================================ -->
+<div class="panel" id="panel-settings">
+  <div class="pg-head"><h2>Company Settings</h2><p>Exporter details pre-filled on every document.</p></div>
+  <div id="settings-alert" class="alert a-ok">Settings saved successfully.</div>
+  <div class="card">
+    <div class="card-head"><div class="sec-ic">🏭</div><h3>Exporter Details</h3></div>
+    <div class="card-body"><div class="grid g2">
+      <div class="field"><label>Company Name</label><input id="s-co" value="LOGICA INFOWAY LIMITED"></div>
+      <div class="field"><label>Formerly Known As</label><input id="s-fmr" value="Eastern Logica Infoway Ltd."></div>
+      <div class="field"><label>CIN</label><input id="s-cin" value="L30007WB1995PLC073218"></div>
+      <div class="field"><label>GSTIN</label><input id="s-gstin" value="07AABCE0772B1Z6"></div>
+      <div class="field"><label>IEC No.</label><input id="s-iec" value="0207020001"></div>
+      <div class="field"><label>Contact No.</label><input id="s-cont" value="9831038911"></div>
+      <div class="field"><label>Address Line 1</label><input id="s-a1" value="2nd Floor, Bearing No.78 Block A, Phase2,"></div>
+      <div class="field"><label>Address Line 2</label><input id="s-a2" value="Okhla Industrial Area, New Delhi – 110020"></div>
+    </div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="sec-ic">🏦</div><h3>Bank Details</h3></div>
+    <div class="card-body"><div class="grid g2">
+      <div class="field"><label>Bank Name</label><input id="s-bk" value="ICICI BANK"></div>
+      <div class="field"><label>Branch Address</label><input id="s-br" value="Branch 38, Hemanta Basu Sarani, Sir R.N. Mukherjee Road, Kolkata – 700001"></div>
+      <div class="field"><label>AD Code</label><input id="s-adc" value="6390008 / 1000009"></div>
+      <div class="field"><label>Account No.</label><input id="s-acc" value="000651000589"></div>
+      <div class="field"><label>IFSC Code</label><input id="s-ifsc" value="ICIC0000006"></div>
+      <div class="field"><label>SWIFT Code</label><input id="s-swft" value="ICICINBBCTS"></div>
+    </div></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="sec-ic">📍</div><h3>Office Addresses</h3></div>
+    <div class="card-body"><div class="grid g2">
+      <div class="field"><label>Regd. Office</label><input id="s-regd" value="2, Saklat Place, 1st Floor, Kolkata – 700072"></div>
+      <div class="field"><label>Corp. Office</label><input id="s-corp" value="A-78, Okhla Industrial Area, Phase-II, New Delhi – 110020"></div>
+      <div class="field"><label>Email</label><input id="s-email" value="info@logicainfoway.com"></div>
+      <div class="field"><label>Website</label><input id="s-web" value="www.logicainfoway.com"></div>
+    </div></div>
+  </div>
+  <div class="btn-row"><button class="btn btn-success btn-lg" onclick="saveSettings()">✓ Save All Settings</button></div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS & STATE
+// ═══════════════════════════════════════════════════════════════
+const DECL=`1. I/We undertake to abide by the provisions, including conditions, restrictions, exclusions and time-limits as provided under RoDTEP scheme, and relevant notifications, regulations, etc., as amended from time to time.\n2. Any claim made in this shipping bill or bill of export is not with respect to any duties or taxes or levies which are exempted or remitted or credited under any other mechanism outside RoDTEP.\n3. I/We undertake to preserve and make available relevant documents relating to the exported goods for the purposes of audit in the manner and for the time period prescribed in the Customs Audit Regulations, 2018.`;
+
+let SD=null, activeBuyer=0, activeDoc='ci', bCount=0, activeITab='form';
+let editingBuyerIdx=null; // for buyer modal edit
+
+// ═══════════════════════════════════════════════════════════════
+// localStorage helpers
+// ═══════════════════════════════════════════════════════════════
+const LS={
+  get:(k,def=[])=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch{return def;}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{console.warn('LS full');}},
+};
+const KEY_BUYERS='logica_buyers';
+const KEY_SHIPMENTS='logica_shipments';
+const KEY_SETTINGS='logica_settings';
+const KEY_TRACKER='logica_tracker';
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+window.onload=()=>{
+  loadSettings();
+  const t=new Date(),fmt=d=>d.toISOString().split('T')[0];
+  document.getElementById('idate').value=fmt(t);
+  const p=new Date(t);p.setDate(p.getDate()-20);
+  document.getElementById('pdate').value=fmt(p);
+  updateRef();
+  addItem(true);
+  addPackRow(true);
+  addBuyer();
+  updateSidebarBadges();
+  renderBuyerDirectory();
+  renderArchive();
+  renderTracker();
+  renderFinance();
+  invLoad();
+  invRender();
+  // Set today's date on inventory forms
+  const todayStr = new Date().toISOString().split('T')[0];
+  ['inv-p-date','inv-s-date','inv-t-date'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value=todayStr;
+  });
+
+  // Lock tabs on any change to the entry form (delegated listener)
+  const formPanel = document.getElementById('ipanel-form');
+  if(formPanel){
+    formPanel.addEventListener('input', ()=>lockTabs(), {passive:true});
+    formPanel.addEventListener('change', ()=>lockTabs(), {passive:true});
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  const titles={invoice:'Shipment Lodging',tracker:'Shipment Tracker',inventory:'Inventory Management',buyers:'Buyer Directory',archive:'Document Archive',finance:'Financial Dashboard',settings:'Company Settings'};
+  document.getElementById('tb-title').textContent=titles[name]||name;
+  document.getElementById('tb-sub').textContent='';
+
+  const ta=document.getElementById('topbar-action');
+  if(name==='invoice'){ta.style.display='';ta.textContent='⚡ Generate Documents';ta.onclick=generateAll;}
+  else{ta.style.display='none';}
+  document.getElementById('inv-badge').style.display=name==='invoice'?'':'none';
+  if(name==='finance')renderFinance();
+  if(name==='archive')renderArchive();
+  if(name==='tracker')renderTracker();
+}
+
+function lockTabs(){
+  // Re-lock docs and insmail tabs — called whenever entry form changes
+  SD = null; // invalidate generated data
+  ['itab-docs','itab-insmail'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.add('tab-item-locked');
+    el.onclick = ()=>switchITabGuarded(id.replace('itab-',''));
+  });
+  // If currently on a locked tab, bounce back to form
+  if(activeITab === 'docs' || activeITab === 'insmail'){
+    switchITab('form');
+  }
+  // Hide generated content
+  const noDoc = document.getElementById('no-docs');
+  const docsC = document.getElementById('docs-content');
+  if(noDoc) noDoc.style.display='block';
+  if(docsC) docsC.style.display='none';
+}
+
+function unlockTabs(){
+  ['itab-docs','itab-insmail'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('tab-item-locked');
+    const t = id.replace('itab-','');
+    el.onclick = ()=>switchITab(t);
+  });
+}
+
+function switchITabGuarded(t){
+  // Only allow switching to docs/insmail if documents have been generated
+  if(!SD){
+    // Flash the Entry Form tab to hint user needs to generate first
+    const formTab = document.getElementById('itab-form');
+    formTab.style.background='var(--amber-l)';
+    formTab.style.color='var(--amber)';
+    setTimeout(()=>{
+      formTab.style.background='';
+      formTab.style.color='';
+    }, 800);
+    return;
+  }
+  switchITab(t);
+}
+
+function switchITab(t){
+  activeITab=t;
+  ['form','docs','insmail'].forEach(x=>{
+    document.getElementById('itab-'+x).classList.toggle('active',x===t);
+    document.getElementById('ipanel-'+x).style.display=x===t?'block':'none';
+  });
+  if(t==='insmail') initInsMail();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REFERENCE NUMBERS
+// ═══════════════════════════════════════════════════════════════
+['fy','sno'].forEach(id=>document.getElementById(id).addEventListener('input',updateRef));
+function updateRef(){
+  const yr=g('fy'),no=g('sno').padStart(3,'0');
+  const rawNo=g('sno');const invNo=`EX/${yr.replace('-','')}13000${rawNo}`;
+  document.getElementById('ino').value=invNo;
+  document.getElementById('pno').value=`EL/${yr}/${no}`;
+  const b=document.getElementById('inv-badge');
+  b.textContent=invNo;
+  b.style.display='';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DGFT LIVE EXCHANGE RATE FETCH
+// ═══════════════════════════════════════════════════════════════
+function fetchDGFTRate(){
+  // DGFT customs rates update fortnightly (1st & 15th of each month).
+  // The page cannot be fetched cross-origin, so we open it for the user to verify.
+  window.open('https://www.dgft.gov.in/CP/?opt=currency-list-exchange-rates','_blank');
+  const hint=document.getElementById('xrate-hint');
+  if(hint) hint.innerHTML='DGFT page opened in a new tab. Check the <strong>USD Export Rate</strong> and update the field above if it has changed. &nbsp;<a href="https://www.dgft.gov.in/CP/?opt=currency-list-exchange-rates" target="_blank" style="color:var(--accent);">Open DGFT &#8599;</a>';
+}
+
+function setRate(rate,source,date){
+  document.getElementById('xrate').value=rate;
+  document.querySelectorAll('#ibody tr').forEach(tr=>{const i=tr.querySelectorAll('input[type=number]');if(i[0])rcRow(i[0]);});
+  const src=document.getElementById('xrate-src');
+  if(src) src.innerHTML=`<span style="color:var(--green);font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;">${source}${date?' · '+date:''}</span>`;
+  const hint=document.getElementById('xrate-hint');
+  const btn=document.getElementById('xrate-btn');
+  if(hint) hint.innerHTML=`Rate: &#8377;${rate}/USD (${source}${date?' as of '+date:''}) &nbsp;&mdash;&nbsp; <a href="https://www.dgft.gov.in/CP/?opt=currency-list-exchange-rates" target="_blank" style="color:var(--accent);">View DGFT &#8599;</a>`;
+  if(btn){btn.textContent='Refresh';btn.disabled=false;}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUYERS (Entry Form)
+// ═══════════════════════════════════════════════════════════════
+const BPRE=[
+  {n:'CROWN LOGISTICS FZCO',a1:'G-12 Warehouse, Dubai Airport Free Zone',a2:'Po Box: 54620 Dubai, U.A.E.',trn:'100433151600003',con:'+97142386222',cy:'U.A.E.',pay:'After Inspection',sfx:''},
+  {n:'',a1:'',a2:'',trn:'',con:'',cy:'U.A.E.',pay:'ADVANCE',sfx:'A'},
+];
+
+function addBuyer(preset){
+  const idx=bCount++;
+  const pre=preset||(BPRE[idx]||BPRE[1]);
+  const sfx=pre.sfx!==undefined?pre.sfx:(idx===0?'':String.fromCharCode(64+idx));
+  const tabs=document.getElementById('btabs');
+  const tab=document.createElement('div');
+  tab.className='btab'+(idx===0?' active':'');
+  tab.id=`bt-${idx}`;
+  tab.textContent=idx===0?'Buyer 1 (Main)':`Buyer ${idx+1} (Sub-invoice)`;
+  tab.onclick=()=>switchBTab(idx);
+  tabs.appendChild(tab);
+  const panes=document.getElementById('bpanes');
+  const pane=document.createElement('div');
+  pane.className='bpane'+(idx===0?' active':'');
+  pane.id=`bp-${idx}`;
+  pane.innerHTML=`<div class="grid g3" style="margin-bottom:12px;">
+    <div class="field" style="grid-column:1/3"><label>Buyer Company Name *</label><input id="b${idx}-n" value="${pre.n||''}" placeholder="Company name"></div>
+    <div class="field"><label>Invoice Suffix (e.g. A, B)</label><input id="b${idx}-s" value="${sfx}" placeholder="Blank = main invoice" style="max-width:130px"></div>
+    <div class="field"><label>Address Line 1</label><input id="b${idx}-a1" value="${pre.a1||''}"></div>
+    <div class="field"><label>Address Line 2</label><input id="b${idx}-a2" value="${pre.a2||''}"></div>
+    <div class="field"><label>TRN / Tax ID</label><input id="b${idx}-trn" value="${pre.trn||''}"></div>
+    <div class="field"><label>Contact No.</label><input id="b${idx}-con" value="${pre.con||''}"></div>
+    <div class="field"><label>Country</label><input id="b${idx}-cy" value="${pre.cy||'U.A.E.'}"></div>
+    <div class="field"><label>Payment Terms (overrides global)</label><input id="b${idx}-pay" value="${pre.pay||'After Inspection'}"></div>
+  </div>
+  ${idx>0?`<button class="btn btn-danger btn-sm" onclick="remBuyer(${idx})">Remove</button>`:''}`;
+  panes.appendChild(pane);
+}
+
+function switchBTab(i){
+  document.querySelectorAll('.btab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.bpane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`bt-${i}`)?.classList.add('active');
+  document.getElementById(`bp-${i}`)?.classList.add('active');
+}
+function remBuyer(i){document.getElementById(`bt-${i}`)?.remove();document.getElementById(`bp-${i}`)?.remove();}
+function getBuyers(){
+  const res=[];
+  for(let i=0;i<bCount;i++){
+    if(!document.getElementById(`bp-${i}`))continue;
+    res.push({n:g(`b${i}-n`),a1:g(`b${i}-a1`),a2:g(`b${i}-a2`),trn:g(`b${i}-trn`),con:g(`b${i}-con`),cy:g(`b${i}-cy`),pay:g(`b${i}-pay`),sfx:g(`b${i}-s`)});
+  }
+  return res;
+}
+
+function openBuyerPickerForEntry(){
+  const buyers=LS.get(KEY_BUYERS);
+  if(!buyers.length){
+    if(confirm('No buyers saved yet. Go to Buyer Directory to add buyers?\n\nClick OK to go there now.')){switchTab('buyers');}
+    return;
+  }
+  // Build and show inline picker modal
+  const existing=document.getElementById('buyer-picker-modal');
+  if(existing)existing.remove();
+  const modal=document.createElement('div');
+  modal.id='buyer-picker-modal';
+  modal.className='modal-bg show';
+  modal.innerHTML=`<div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <h3>Load Buyer from Directory</h3>
+      <button class="modal-close" onclick="document.getElementById('buyer-picker-modal').remove()">×</button>
+    </div>
+    <div class="modal-body" style="padding:12px 16px;">
+      <input placeholder="🔍 Search buyers…" oninput="filterBuyerPicker(this.value)"
+        style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;outline:none;margin-bottom:10px;">
+      <div id="buyer-picker-list" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+        ${buyers.map((b,i)=>`
+          <div class="buyer-picker-row" data-name="${b.name.toLowerCase()}" onclick="pickBuyerForEntry(${i})"
+            style="padding:10px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .12s;background:var(--surface);"
+            onmouseover="this.style.background='var(--accent-l)';this.style.borderColor='var(--accent)'"
+            onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'">
+            <div style="font-weight:700;font-size:13px;">${b.name}</div>
+            <div style="font-size:11.5px;color:var(--ink3);margin-top:2px;">${b.addr1||''} ${b.addr2?'· '+b.addr2:''}</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+              ${b.trn?`<span class="tag">TRN: ${b.trn}</span>`:''}
+              <span class="tag">Pay: ${b.payterm||'—'}</span>
+              <span class="tag">${b.country||'—'}</span>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function filterBuyerPicker(q){
+  document.querySelectorAll('.buyer-picker-row').forEach(row=>{
+    row.style.display=row.dataset.name.includes(q.toLowerCase())?'':'none';
+  });
+}
+
+function pickBuyerForEntry(i){
+  const buyers=LS.get(KEY_BUYERS);
+  const b=buyers[i];
+  if(!b)return;
+  addBuyer({n:b.name,a1:b.addr1,a2:b.addr2,trn:b.trn,con:b.contact,cy:b.country,pay:b.payterm,sfx:''});
+  switchBTab(bCount-1);
+  document.getElementById('buyer-picker-modal')?.remove();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LINE ITEMS
+// ═══════════════════════════════════════════════════════════════
+function addItem(pf){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" value="${pf?'MAC BOOK AIR M4 16/256GB (MW123HN/A) Made in CHINA (NON ACTIVATED)':''}" placeholder="Description of goods"></td>
+    <td><input type="text" value="${pf?'84713010':''}" placeholder="HSN Code"></td>
+    <td><input type="number" value="${pf?200:''}" placeholder="0" min="1" oninput="rcRow(this)"></td>
+    <td><input type="number" value="${pf?845:''}" placeholder="0.00" step="0.01" oninput="rcRow(this)"></td>
+    <td><input type="number" readonly value="${pf?169000:''}"></td>
+    <td><input type="number" readonly value=""></td>
+    <td><button class="ic-btn" onclick="this.closest('tr').remove()" title="Remove row">✕</button></td>`;
+  document.getElementById('ibody').appendChild(tr);
+  if(pf)rcRow(tr.querySelectorAll('input[type=number]')[0]);
+}
+
+function rcRow(el){
+  const tr=el.closest('tr');
+  const ins=tr.querySelectorAll('input[type=number]');
+  const qty=parseFloat(ins[0].value)||0,price=parseFloat(ins[1].value)||0;
+  const rate=parseFloat(g('xrate'))||1;
+  ins[2].value=(qty*price).toFixed(2);
+  ins[3].value=(qty*price*rate).toFixed(2);
+}
+
+document.getElementById('xrate').addEventListener('input',()=>
+  document.querySelectorAll('#ibody tr').forEach(tr=>{const i=tr.querySelectorAll('input[type=number]');if(i[0])rcRow(i[0]);}));
+
+function getItems(){
+  return[...document.querySelectorAll('#ibody tr')].map(tr=>{
+    const ins=tr.querySelectorAll('input');
+    return{desc:ins[0].value.trim(),hsn:ins[1].value.trim(),qty:+ins[2].value||0,price:+ins[3].value||0,amtUSD:+ins[4].value||0,amtINR:+ins[5].value||0};
+  }).filter(i=>i.desc);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════════════
+function getEx(){return{co:g('s-co'),fmr:g('s-fmr'),cin:g('s-cin'),gstin:g('s-gstin'),iec:g('s-iec'),cont:g('s-cont'),a1:g('s-a1'),a2:g('s-a2'),bk:g('s-bk'),br:g('s-br'),adc:g('s-adc'),acc:g('s-acc'),ifsc:g('s-ifsc'),swft:g('s-swft'),regd:g('s-regd'),corp:g('s-corp'),email:g('s-email'),web:g('s-web')};}
+function saveSettings(){
+  LS.set(KEY_SETTINGS,getEx());
+  const el=document.getElementById('settings-alert');
+  el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);
+}
+function loadSettings(){
+  const s=LS.get(KEY_SETTINGS,null);
+  if(!s)return;
+  Object.entries(s).forEach(([k,v])=>{const el=document.getElementById('s-'+k);if(el)el.value=v;});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GENERATE
+// ═══════════════════════════════════════════════════════════════
+function generateAll(){
+  const items=getItems();
+  if(!items.length){showAlert('form-alert','a-err','Please add at least one line item.');return;}
+  showL('Generating all export documents…');
+  setTimeout(()=>{
+    const buyers=getBuyers(),ex=getEx();
+    const xrate=+g('xrate')||1,igstPct=+g('igst')||18;
+    const totalUSD=items.reduce((s,i)=>s+i.amtUSD,0);
+    const totalINR=totalUSD*xrate,igstAmt=totalINR*igstPct/100;
+    const totalPcs=items.reduce((s,i)=>s+i.qty,0);
+    const packListEntries=getPackListEntries();
+    const totalBoxes=packListEntries?packListEntries.reduce((s,r)=>s+r.numBoxes,0):0;
+    SD={
+      ino:g('ino'),pno:g('pno'),idate:g('idate'),pdate:g('pdate'),
+      xrate,igstPct,igstAmt,totalUSD,totalINR,invINR:totalINR+igstAmt,
+      totalPcs,totalBoxes,insPct:+g('insp')||110,
+      gweight:g('gweight'),items,buyers,ex,
+      mode:g('mode'),pol:g('pol'),pod:g('pod'),dest:g('dest'),
+      coo:g('coo'),dterm:g('dterm'),pterm:g('pterm'),pcar:g('pcar'),
+      cn:g('cn'),ca1:g('ca1'),ca2:g('ca2'),ctrn:g('ctrn'),cc:g('cc'),ccy:g('ccy'),
+      rmk:g('rmk'),savedAt:new Date().toISOString(),
+      packData:imeiData.length?JSON.parse(JSON.stringify(imeiData)):null,
+      packBoxes:getImeiByBox(),
+      packListEntries:packListEntries,
+    };
+    buildBuyerPills();
+    activeBuyer=0;activeDoc='ci';
+    selDoc('ci');
+    document.getElementById('no-docs').style.display='none';
+    document.getElementById('docs-content').style.display='block';
+    document.getElementById('tb-sub').textContent=SD.ino+' — '+fmtD(SD.idate);
+    switchITab('docs');
+    unlockTabs();
+    hideL();
+  },550);
+}
+
+function buildBuyerPills(){
+  const row=document.getElementById('buyer-pills');row.innerHTML='';
+  SD.buyers.forEach((b,i)=>{
+    const sfxLbl=b.sfx?` (${SD.ino}${b.sfx})`:'';
+    const pill=document.createElement('div');
+    pill.className='pill'+(i===0?' active':'');
+    pill.textContent=(b.n||`Buyer ${i+1}`)+sfxLbl;
+    pill.onclick=()=>{activeBuyer=i;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));pill.classList.add('active');renderDoc();};
+    row.appendChild(pill);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOC RENDERER DISPATCHER
+// ═══════════════════════════════════════════════════════════════
+function selDoc(t){
+  document.querySelectorAll('.doc-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('dc-'+t)?.classList.add('selected');
+  activeDoc=t;
+  const lbls={ci:'Commercial Invoice',pl:'Packing List',po:'Purchase Order — Buyer Stamp & Signature',sn:'Serial / IMEI Number Register'};
+  document.getElementById('doc-lbl').textContent=lbls[t];
+  renderDoc();
+}
+function renderDoc(){
+  if(!SD)return;
+  const b=SD.buyers[activeBuyer]||SD.buyers[0];
+  const invNo=SD.ino+(b.sfx||'');
+  const piNo=invNo.replace('EX/','PI/');
+  const payterm=b.pay||SD.pterm;
+  const ctx={...SD,b,invNo,piNo,payterm};
+  const fn={ci:rCI,pl:rPL,po:rPO,sn:rSN};
+  document.getElementById('doc-body').innerHTML=(fn[activeDoc]||'')(ctx);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHARED DOCUMENT FRAGMENTS
+// ═══════════════════════════════════════════════════════════════
+// ═══ LETTERHEAD CONSTANTS ═══
+const LH_HEADER = '<div style="position:relative;margin:-30px -38px 20px -47px;background:#fff;border-bottom:1px solid #e0e0e0;"><div style="position:absolute;left:0;top:0;bottom:0;width:9px;"><div style="height:33.33%;background:#96d3ed;"></div><div style="height:33.33%;background:#fde864;"></div><div style="height:33.34%;background:#a6db55;"></div></div><div style="padding:14px 20px 12px 24px;display:flex;justify-content:space-between;align-items:flex-start;"><div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC8AAAAzCAYAAAAHM1FMAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADOUlEQVRogdXZS6hVZRTA8d/eXgrlwi2hROIOyhCSGtUkykchBVn0MKQkuJNo4DBTcCDkQDGshjWpiUFRCVFYUJrVICIooogsewwKkQrES2YU2Wrw3UPH03nsx9n3nPOHO9mv73++u/b3rbV2FhEa5GI8hvuxCj/iMPbjTO2nR0RTf6sj4nh053hEXF13jKyhmb8OR7CizzU/4Xr8WnWQvOqNfbgB7+svDrN4GVNVBxq2/M14F8sLXn8Lnqg82hBjfGNE/N4jxgfxwChj/k4cklaXKpzDjfiizE3DCJsteE11cVi28Iyi4Yb68nN4SY2Xro2r8CKWFL6jRoxvqxjfg9hb1KGq+M6GxFvc14R8FhF7GhaPiPgtIq4ZpnwWEU8tgniLbyJipp9T0Rc2xzN4tPx7WJnVOKjfolJgxqci4uAizngnu3t4DdykLpKWr81DndNyBO7Cm50n+skvlXbNO5rzKsy8lPB9136wVzxNS790HMRhRtqBp9sPdpO/BO9IGd84cS2eR9Y60Cl/GY5JSdI4skUqK3FhzK/EUawZgVQZ/sHtONqSvwIfSEXyJHAKq7KIyKXqZ8NofUqzPccjJk8ctua4e9QWFZnNIuKMtI5OGvM5/hq1RUU+zKUW3CTyei7VoJPGe3gui4hlUsKzcsRCRfke63Eyl3omc9LONe58hbU4yX+5zRHsGpVRQT6TZvxU60B7bpPhFamXPm58JKXnF/T0O4uRaXxsvJKzY9JGerbzRGdKfBb3SJXLOPCW1Af9nzjdi5Fv8ZBUO46SQ7gXf/S6oFcZeBiPNyBUlBfwoEG7f6+2QkTkEfHGIrY4Wjy7MHbtdt9MRJxYRPEnI3XmhtZoXROpd9g0e8qIF5UXEZsbFt9RRrqsvIjY15D4tiriZeWXRMTbQ5Q+HxFzVcWjQK+yk+X4BFdWXgQTf2MrXq3zkLLfpE4bsHEU4M+FZ9QSp9oHtc/xcMXxzmGTtAnWp0bMPV0yxucj4qY6MV435tuZkuqADQWuPY3b8GnVwbpR9wv45dILPNvnmp+xEV/WGagbdT8i/4JbcaLH+a+xTgPi1J/5FpdKZeQm6b/wg5TSHpBWl0b4F33qeCflupHwAAAAAElFTkSuQmCC" style="width:52px;height:auto;" alt="Logica"></div><div style="text-align:right;line-height:1.3;"><div style="font-family:\'Britannic Bold\',\'Arial Black\',Arial,sans-serif;font-size:21px;font-weight:900;font-style:italic;color:#000099;letter-spacing:0.5px;">LOGICA INFOWAY LTD.</div><div style="font-size:8.5px;color:#1E019B;font-weight:600;margin-top:1px;">[Formerly: Eastern Logica Infoway Ltd.]</div><div style="font-size:8px;color:#1E019B;margin-top:1px;">CIN: L30007WB1995PLC073218</div><div style="font-size:8px;color:#555;margin-top:1px;">GSTIN: 07AABCE0772B1Z6 &nbsp;|&nbsp; IEC: 0207020001</div></div></div><div style="height:3px;display:flex;margin-left:9px;"><div style="flex:1;background:#96d3ed;"></div><div style="flex:1;background:#fde864;"></div><div style="flex:1;background:#a6db55;"></div></div></div>';
+const LH_FOOTER = '<div style="margin:20px -38px -30px -47px;border-top:1.5px solid #111;padding:7px 20px 8px 24px;background:#fff;"><div style="text-align:center;font-size:8px;color:#111;line-height:1.8;font-family:Arial,sans-serif;"><div><strong>Regd. Office:</strong> 2, Saklat Place, 1<sup>st</sup> Floor, Kolkata - 700 072 &nbsp;&#9742; +91 33 4058 0000 &nbsp;&nbsp;&nbsp;<strong>Corp. Office:</strong> A-78, Okhla Industrial Area, Phase-II, New Delhi - 110020 &nbsp;&#9742; +91 11 4362 8116</div><div>&#9993; info@logicainfoway.com &nbsp;&nbsp;&nbsp; &#8709; www.logicainfoway.com</div></div></div>';
+
+function coHead(d){return`<div class="dh-co"><div class="dh-name">${d.ex.co}</div><div class="dh-sub">[Formerly: ${d.ex.fmr}]</div><div class="dh-sub">CIN: ${d.ex.cin}</div></div>`;}
+function lhHead(){return LH_HEADER;}
+function lhFoot(){return LH_FOOTER;}
+function coFoot(d){return`<div class="d-foot">Regd. Office: ${d.ex.regd} &nbsp;|&nbsp; Corp. Office: ${d.ex.corp}<br>✉ ${d.ex.email} &nbsp;&nbsp; 🌐 ${d.ex.web}</div>`;}
+function topGrid(d,isPI){
+  const lbl=isPI?'Performa Invoice No':'Invoice No. & Date';
+  const num=isPI?d.piNo:d.invNo;
+  return`<table class="dt" style="margin-bottom:0"><tr>
+    <td rowspan="2" style="width:46%;vertical-align:top;padding:7px 9px;">
+      <span class="dc-lbl">Exporter</span><div class="dc-vlg">${d.ex.co}</div>
+      <div style="font-size:10px;">Formerly: ${d.ex.fmr}</div>
+      <div style="font-size:10px;">${d.ex.a1}</div><div style="font-size:10px;">${d.ex.a2}</div>
+      <div style="font-size:10px;">Cont. no. ${d.ex.cont}</div>
+    </td>
+    <td colspan="2" style="padding:5px 8px;vertical-align:top;">
+      <span class="dc-lbl">${lbl}</span>
+      <div style="font-weight:bold;font-size:12px;">${num}</div>
+      <div style="font-size:10px;">Date: ${fmtD(d.idate)}</div>
+    </td>
+    <td style="padding:5px 8px;vertical-align:top;">
+      <span class="dc-lbl">Exporter's Ref</span>
+      <div style="font-size:10px;">GSTIN- ${d.ex.gstin}</div>
+    </td>
+  </tr><tr>
+    <td colspan="2" style="padding:5px 8px;vertical-align:top;">
+      <div style="font-size:10px;">PO. NO. ${d.pno} &nbsp; Date: ${fmtD(d.pdate)}</div>
+    </td>
+    <td style="padding:5px 8px;vertical-align:top;">
+      <span class="dc-lbl">IEC NO.</span><div style="font-size:10px;">${d.ex.iec}</div>
+    </td>
+  </tr></table>`;
+}
+function csgBuyer(d){
+  const b=d.b;
+  return`<table class="dt" style="margin-bottom:0"><tr>
+    <td style="width:50%;vertical-align:top;padding:7px 9px;">
+      <span class="dc-lbl">Consignee</span>
+      <div style="font-weight:bold;font-size:11px;">${d.cn}</div>
+      <div style="font-size:10px;">${d.ca1}</div><div style="font-size:10px;">${d.ca2}</div>
+      <div style="font-size:10px;">TRN: ${d.ctrn}</div><div style="font-size:10px;">CON.NO. ${d.cc}</div>
+    </td>
+    <td style="width:50%;vertical-align:top;padding:7px 9px;">
+      <span class="dc-lbl">Buyer (if other than consignee)</span>
+      <div style="font-weight:bold;font-size:11px;">${b.n||d.cn}</div>
+      <div style="font-size:10px;">${b.a1||d.ca1}</div><div style="font-size:10px;">${b.a2||d.ca2}</div>
+      ${b.trn?`<div style="font-size:10px;">TRN: ${b.trn}</div>`:''}
+      ${b.con?`<div style="font-size:10px;">CON.NO. ${b.con}</div>`:''}
+    </td>
+  </tr></table>`;
+}
+function routeT(d,showPayment=true){
+  return`<table class="dt" style="margin-bottom:0">
+    <tr><td style="padding:4px 7px;"><span class="dc-lbl">Per-Carriage By</span>${d.pcar}</td><td colspan="3" style="padding:4px 7px;"><span class="dc-lbl">Place of Receipt by Per-Carrier</span>${d.pol}</td></tr>
+    <tr><td style="padding:4px 7px;"><span class="dc-lbl">Mode of Shipment</span>${d.mode}</td><td colspan="3" style="padding:4px 7px;"><span class="dc-lbl">Port of Loading</span>${d.pol}</td></tr>
+    <tr><td style="padding:4px 7px;"><span class="dc-lbl">Port of Discharge</span>${d.pod}</td><td colspan="3" style="padding:4px 7px;"><span class="dc-lbl">Final Destination</span>${d.dest}</td></tr>
+    <tr>
+      <td style="padding:4px 7px;"><span class="dc-lbl">Country of Origin</span>${d.coo}</td>
+      <td style="padding:4px 7px;"><span class="dc-lbl">Country of Final Dest.</span>${d.b?.cy||d.ccy}</td>
+      <td style="padding:4px 7px;"><span class="dc-lbl">Delivery Term</span>${d.dterm}</td>
+      ${showPayment?`<td style="padding:4px 7px;"><span class="dc-lbl">Payment Terms</span>${d.payterm}</td>`:'<td></td>'}
+    </tr>
+  </table>`;
+}
+function bkSig(d){
+  return`<div class="d-bs">
+    <div>
+      <div style="font-weight:bold;font-size:10px;margin-bottom:3px;">Bank Details</div>
+      <div style="line-height:1.8;font-size:9.5px;">BANK NAME: ${d.ex.bk}<br>ADDRESS: ${d.ex.br}<br>AD CODE: ${d.ex.adc} &nbsp;|&nbsp; A/C NO: ${d.ex.acc}<br>IFSC: ${d.ex.ifsc} &nbsp;|&nbsp; SWIFT: ${d.ex.swft}</div>
+      <div style="margin-top:6px;font-size:9px;font-style:italic;">We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct. It is a computerized generated invoice, no signature required.</div>
+    </div>
+    <div class="d-sig"><div style="font-size:10px;font-weight:bold;">${d.ex.co}</div><div class="d-sig-lbl">AUTH SIGNATORY &nbsp;|&nbsp; Signature & Date</div></div>
+  </div>`;
+}
+function declBlock(d){return`<div class="d-decl">${DECL.split('\n').map(l=>`<p>${l}</p>`).join('')}</div>${d.rmk?`<div style="margin-top:7px;font-size:9.5px;">${d.rmk.replace(/\n/g,'<br>')}</div>`:''}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOCUMENT RENDERERS
+// ═══════════════════════════════════════════════════════════════
+function rCI(d){
+  const rows=d.items.map(i=>`<tr><td>&nbsp;</td><td>${i.desc}</td><td class="nc">${i.hsn}</td><td class="nc">${fN(i.qty)} Pcs</td><td class="nr">${i.price.toFixed(2)}</td><td class="nr">${fN(i.amtUSD)}</td><td class="nr">${fINR(i.amtINR)}</td></tr>`).join('');
+  return`${lhHead()}<div class="dtitle">Commercial Invoice</div>${topGrid(d,false)}${csgBuyer(d)}${routeT(d)}
+    <table class="dt"><thead><tr><th style="width:60px">Marks&amp;Nos</th><th>Description of Goods</th><th>HSN</th><th>Qty</th><th>Rate CIF US$</th><th>Amount CIF US$</th><th>Amount INR</th></tr></thead>
+    <tbody>${rows}<tr class="tot"><td colspan="3">Total</td><td class="nc">${fN(d.totalPcs)} Pcs</td><td></td><td class="nr">${fN(d.totalUSD)}</td><td class="nr">${fINR(d.totalINR)}</td></tr></tbody></table>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:14px;margin-top:8px;align-items:start;">
+      <div><div class="d-words"><strong>Amount in Words – (USD: ${n2w(Math.round(d.totalUSD))} ONLY)</strong></div><div style="font-size:9.5px;margin-top:5px;">Exchange rate @ ${d.xrate}</div></div>
+      <table style="font-size:10.5px;border-collapse:collapse;min-width:240px;">
+        <tr><td style="padding:3px 9px;border:.5px solid #ccc;">Taxable Value</td><td style="padding:3px 9px;border:.5px solid #ccc;text-align:right;">${fINR(d.totalINR)}</td></tr>
+        <tr><td style="padding:3px 9px;border:.5px solid #ccc;">IGST @ ${d.igstPct}%</td><td style="padding:3px 9px;border:.5px solid #ccc;text-align:right;">${fINR(d.igstAmt)}</td></tr>
+        <tr style="font-weight:bold;background:#f0f0f0;"><td style="padding:3px 9px;border:.5px solid #ccc;">Invoice Value</td><td style="padding:3px 9px;border:.5px solid #ccc;text-align:right;">${fINR(d.invINR)}</td></tr>
+      </table>
+    </div>${declBlock(d)}${bkSig(d)}${lhFoot()}`;
+}
+
+function rPL(d){
+  const entries=d.packListEntries||[];
+  const totalBoxes=entries.reduce((s,r)=>s+r.numBoxes,0)||d.totalBoxes||0;
+  const totalPcs=entries.reduce((s,r)=>s+r.totalPcs,0)||d.totalPcs||0;
+  const bodyRows=entries.map(r=>`<tr>
+    <td class="nc">${escH(r.boxLabel)}</td>
+    <td class="nc">${r.numBoxes}</td>
+    <td>${escH(r.desc)}</td>
+    <td class="nc">${r.pcsPerBox}</td>
+    <td class="nc">${fN(r.totalPcs)}</td>
+    <td></td></tr>`).join('');
+
+  return`${lhHead()}<div class="dtitle">Packing List</div>
+    <table class="dt" style="margin-bottom:0"><tr>
+      <td style="width:55%;padding:7px 9px;vertical-align:top;"><span class="dc-lbl">Exporter</span><div class="dc-vlg">${d.ex.co}</div><div style="font-size:10px;">${d.ex.a1}</div><div style="font-size:10px;">${d.ex.a2}</div><div style="font-size:10px;">Cont.no.${d.ex.cont}</div></td>
+      <td style="padding:7px 9px;vertical-align:top;"><span class="dc-lbl">Invoice No. & Date</span><div style="font-weight:bold;">${d.invNo}</div><div style="font-size:10px;">DT-${fmtD(d.idate)}</div></td>
+    </tr></table>${csgBuyer(d)}${routeT(d,false)}
+    <table class="dt" style="margin-top:4px;margin-bottom:0;"><tr>
+      <td style="padding:4px 7px;"><span class="dc-lbl">Total Pkt. :</span> <strong>${totalBoxes}</strong> box</td>
+      <td style="padding:4px 7px;"><span class="dc-lbl">Net Weight :</span></td>
+      <td style="padding:4px 7px;"><span class="dc-lbl">Gross Weight :</span> ${d.gweight?d.gweight+' kg':''}</td>
+    </tr></table>
+    
+    <div style="font-size:9px;margin-bottom:4px;">As Per Address:-</div>
+    <table class="dt" style="margin-top:4px;"><thead><tr><th>Box No.</th><th>No.of Boxes</th><th>Description</th><th>No. of Pcs Each Box</th><th>Pcs.</th><th>Remark's</th></tr></thead>
+    <tbody>${bodyRows}
+    <tr class="tot"><td></td><td class="nc">${totalBoxes} BOX</td><td></td><td></td><td class="nc">${fN(totalPcs)}</td><td></td></tr></tbody></table>
+    <div class="d-bs">
+      <div><div style="font-weight:bold;font-size:10px;margin-bottom:3px;">Declaration:-</div><div style="font-size:9px;font-style:italic;">We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct. It is a computerised generated invoice, no signature required.</div></div>
+      <div class="d-sig"><div style="font-size:10px;font-weight:bold;">${d.ex.co}</div><div class="d-sig-lbl">Authorised Signatory &amp; Date</div></div>
+    </div>${lhFoot()}`;
+}
+
+function rSN(d){
+  if(!d.packData||!d.packData.length) return'<div style="text-align:center;padding:40px;color:#888;font-size:13px;">No serial/IMEI data uploaded for this shipment.<br>Upload a logistics Excel in the Packing List section to generate this document.</div>';
+  const boxes=d.packBoxes||[];
+  let allRows='';
+  boxes.forEach(bx=>{
+    allRows+=bx.items.map((item,idx)=>`<tr${idx===0?' style="border-top:2px solid #999;"':''}>
+      <td class="nc" style="font-size:10px;">${item.sno}</td>
+      <td class="nc" style="font-weight:${idx===0?'bold':'normal'};color:${idx===0?'#1a4d8f':'#999'};">${idx===0?'BOX '+bx.box:''}</td>
+      <td style="font-family:monospace;font-size:10px;letter-spacing:0.3px;">${escH(item.imei)}</td>
+      <td style="font-size:10px;">${escH(item.model)}</td>
+      <td style="font-size:10px;">${escH(item.color)}</td>
+      <td style="font-size:10px;">${escH(item.party)}</td>
+      <td style="font-size:10px;">${escH(item.bill)}</td>
+    </tr>`).join('');
+  });
+  return`${coHead(d)}<div class="dtitle">Serial / IMEI Number Register</div>
+    <table class="dt" style="margin-bottom:6px;"><tr>
+      <td style="padding:5px 8px;"><span class="dc-lbl">Invoice No.</span><div style="font-weight:bold;">${d.invNo}</div></td>
+      <td style="padding:5px 8px;"><span class="dc-lbl">Date</span>${fmtD(d.idate)}</td>
+      <td style="padding:5px 8px;"><span class="dc-lbl">Total Units</span><strong>${fN(d.packData.length)}</strong></td>
+      <td style="padding:5px 8px;"><span class="dc-lbl">Total Boxes</span><strong>${boxes.length}</strong></td>
+    </tr></table>
+    <table class="dt"><thead><tr><th>S.No.</th><th>Box No.</th><th>IMEI / Serial No.</th><th>Model Name</th><th>Color</th><th>Party Name</th><th>Bill No.</th></tr></thead>
+    <tbody>${allRows}</tbody></table>
+    ${coFoot(d)}`;
+}
+
+function rPO(d){
+  const b=d.b;
+  const rows=d.items.map((i,n)=>`
+    <tr>
+      <td class="nc">${n+1}</td>
+      <td>${i.desc}</td>
+      <td class="nc" style="white-space:nowrap;">${fN(i.qty)} Pcs</td>
+      <td class="nr">USD ${i.price.toFixed(2)}</td>
+      <td class="nr">USD ${fN(i.amtUSD)}</td>
+    </tr>`).join('');
+
+  return`
+    <div style="text-align:center;font-size:16px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;border-top:2px solid #111;border-bottom:2px solid #111;padding:6px 0;margin-bottom:16px;">
+      Purchase Order
+    </div>
+
+    <table class="dt" style="margin-bottom:12px;">
+      <tr>
+        <td style="width:55%;vertical-align:top;padding:9px 10px;">
+          <span class="dc-lbl">Ordering Party (Buyer)</span>
+          <div style="font-size:15px;font-weight:bold;margin-top:2px;">${b.n||d.cn}</div>
+          <div style="font-size:10.5px;margin-top:3px;">${b.a1||d.ca1}</div>
+          <div style="font-size:10.5px;">${b.a2||d.ca2}</div>
+          ${b.trn?`<div style="font-size:10px;margin-top:2px;">TRN: ${b.trn}</div>`:''}
+        </td>
+        <td style="vertical-align:top;padding:9px 10px;">
+          <span class="dc-lbl">Purchase Order No.</span>
+          <div style="font-weight:bold;font-size:13px;">${d.pno}</div>
+          <span class="dc-lbl" style="margin-top:7px;display:block;">Date</span>
+          <div>${fmtD(d.pdate)}</div>
+        </td>
+        <td style="vertical-align:top;padding:9px 10px;">
+          <span class="dc-lbl">Supplier</span>
+          <div style="font-weight:bold;font-size:11px;">${d.ex.co}</div>
+          <div style="font-size:10px;">${d.ex.a1}</div>
+          <div style="font-size:10px;">${d.ex.a2}</div>
+          <div style="font-size:10px;">IEC: ${d.ex.iec}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 10px;border-top:1px solid #e0e0e0;">
+          <span class="dc-lbl">Mode of Shipment</span>
+          <div style="font-size:11px;">${d.mode}</div>
+        </td>
+        <td style="padding:6px 10px;border-top:1px solid #e0e0e0;">
+          <span class="dc-lbl">Final Destination</span>
+          <div style="font-size:11px;">${d.dest}</div>
+        </td>
+        <td style="padding:6px 10px;border-top:1px solid #e0e0e0;">
+          <span class="dc-lbl">Delivery Term</span>
+          <div style="font-size:11px;">${d.dterm}</div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="dt">
+      <thead>
+        <tr>
+          <th style="width:40px;">#</th>
+          <th>Description of Goods</th>
+          <th>Quantity</th>
+          <th>Unit Price</th>
+          <th>Amount (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr class="tot">
+          <td colspan="2" style="font-weight:bold;">TOTAL</td>
+          <td class="nc">${fN(d.totalPcs)} Pcs</td>
+          <td></td>
+          <td class="nr"><strong>USD ${fN(d.totalUSD)}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="d-words" style="margin-top:10px;">
+      <strong>Amount in Words: USD – ${n2w(Math.round(d.totalUSD))} ONLY</strong>
+    </div>
+    <div style="font-size:10px;margin-top:5px;color:#555;">
+      Payment Terms: <strong>100% AGAINST INSPECTION OF STOCKS</strong>
+    </div>
+
+    <div style="margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+      <div class="d-sig" style="min-height:90px;">
+        <div style="font-size:12px;font-weight:bold;margin-bottom:4px;">${b.n||d.cn}</div>
+        <div class="d-sig-lbl">Authorised Signatory &amp; Stamp</div>
+        <div style="font-size:9px;color:#888;margin-top:2px;">Date: _______________</div>
+      </div>
+      <div style="min-height:90px;"></div>
+    </div>
+
+    ${coFoot(d)}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INSURANCE DRAFT
+// ═══════════════════════════════════════════════════════════════
+function updateInsDraft(){
+  if(!SD)return;
+  const d=SD;
+  const awb=document.getElementById('ins-awb')?.value||'[AWB — ENTER ABOVE]';
+  const carrier=document.getElementById('ins-carrier')?.value||'[CARRIER — ENTER ABOVE]';
+  const gw=document.getElementById('ins-gw')?.value||d.gweight||'—';
+  const pkgs=document.getElementById('ins-pkgs')?.value||d.totalBoxes;
+  const pct=parseFloat(document.getElementById('ins-pct2')?.value)||d.insPct;
+  const insVal=Math.round(d.totalUSD*pct/100);
+  if(document.getElementById('ins-val'))document.getElementById('ins-val').value=fN(insVal);
+  const buyerList=d.buyers.map(b=>b.n||'(unnamed)').join('; ');
+  const hasAWB=awb&&!awb.startsWith('[');
+  const awbInput=document.getElementById('ins-awb');
+  if(awbInput){awbInput.style.borderColor=hasAWB?'var(--green)':'var(--border)';awbInput.style.boxShadow=hasAWB?'0 0 0 3px rgba(22,101,52,0.1)':'';}
+
+  const email=
+`To: [Insurance Company Email]
+Subject: Marine Cargo Insurance Advice — ${d.ino} Dt. ${fmtD(d.idate)}
+
+Dear Sir/Madam,
+
+Kindly note the following export shipment for Marine Cargo Insurance:
+
+══════════════════════════════════════════════
+EXPORT BILL DETAILS                 [ATTACHED]
+══════════════════════════════════════════════
+Exporter         :  ${d.ex.co}
+GSTIN            :  ${d.ex.gstin}  |  IEC: ${d.ex.iec}
+
+Invoice No.      :  ${d.ino}
+Invoice Date     :  ${fmtD(d.idate)}
+PO No.           :  ${d.pno}  Dt. ${fmtD(d.pdate)}
+
+Consignee        :  ${d.cn}
+                    ${d.ca1}, ${d.ca2}
+Buyer(s)         :  ${buyerList}
+
+──────────────────────────────────────────────
+GOODS
+──────────────────────────────────────────────
+${d.items.map((i,n)=>`${String(n+1).padStart(2,'0')}. ${i.desc}
+    HSN: ${i.hsn}  |  Qty: ${fN(i.qty)} Pcs  |  Rate: USD ${i.price.toFixed(2)}  |  Amt: USD ${fN(Math.round(i.amtUSD))}`).join('\n\n')}
+
+    TOTAL  :  ${fN(d.totalPcs)} Pcs  =  USD ${fN(Math.round(d.totalUSD))}
+
+══════════════════════════════════════════════
+SHIPMENT DETAILS
+══════════════════════════════════════════════
+Mode             :  ${d.mode}
+Carrier/Airline  :  ${carrier}
+AWB Number       :  ${awb}
+Invoice Date     :  ${fmtD(d.idate)}
+Port of Loading  :  ${d.pol}
+Port of Discharge:  ${d.pod}
+Final Destination:  ${d.dest}
+Country of Origin:  ${d.coo}
+Gross Weight     :  ${gw} kg
+No. of Packages  :  ${pkgs} Boxes  /  ${fN(d.totalPcs)} Pieces
+Delivery Terms   :  ${d.dterm}
+Payment Terms    :  ${d.pterm}
+
+══════════════════════════════════════════════
+INSURANCE REQUIREMENT
+══════════════════════════════════════════════
+CIF Value        :  USD ${fN(Math.round(d.totalUSD))}
+Coverage         :  ${pct}% of CIF
+Insured Value    :  USD ${fN(insVal)}
+Risk Coverage    :  All Risks (Institute Cargo Clauses A)
+
+Kindly issue the Marine Insurance Certificate at the earliest and forward it to us for inclusion in the shipping document set.
+
+Attachment: Export Bill / Commercial Invoice No. ${d.ino}
+
+Regards,
+${d.ex.co}
+${d.ex.a1}, ${d.ex.a2}
+Tel: ${d.ex.cont}  |  ✉ ${d.ex.email}  |  🌐 ${d.ex.web}`;
+
+  const el=document.getElementById('ins-email-text');
+  if(el)el.textContent=email;
+}
+
+function cpIns(){
+  const el=document.getElementById('ins-email-text');
+  if(el)navigator.clipboard.writeText(el.textContent).then(()=>{
+    const btn=event.target;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent='📋 Copy Email',2000);
+  });
+}
+
+function printInsBill(){
+  const d=SD;
+  if(!d)return;
+  const b=d.buyers[0];
+  const ctx={...d,b,invNo:d.ino+(b.sfx||''),piNo:d.ino.replace('EX/','PI/'),payterm:b.pay||d.pterm};
+  const billHTML=rCI(ctx);
+  const styleContent=document.querySelector('style').textContent;
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Export Bill ${d.ino}</title><style>body{font-family:Georgia,serif;font-size:11.5px;color:#111;padding:24px;}${styleContent}</style></head><body>${billHTML}</body></html>`);
+  win.document.close();win.focus();
+  setTimeout(()=>win.print(),400);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAVE / ARCHIVE
+// ═══════════════════════════════════════════════════════════════
+function saveShipment(){
+  if(!SD){alert('Generate documents first before saving.');return;}
+  const ships=LS.get(KEY_SHIPMENTS);
+  const existing=ships.findIndex(s=>s.ino===SD.ino);
+  if(existing>=0){ships[existing]={...SD};} else{ships.push({...SD});}
+  LS.set(KEY_SHIPMENTS,ships);
+  // also update tracker
+  const tracker=LS.get(KEY_TRACKER);
+  if(!tracker.find(t=>t.ino===SD.ino)){
+    tracker.push({ino:SD.ino,buyer:SD.buyers.map(b=>b.n||'—').join(', '),awb:'',carrier:'',dispatchDate:SD.idate,dest:SD.dest,valueUSD:SD.totalUSD,status:'Pending',notes:''});
+    LS.set(KEY_TRACKER,tracker);
+  }
+  updateSidebarBadges();
+  showAlert('form-alert','a-ok',`Shipment ${SD.ino} saved to archive successfully.`);
+  renderArchive();renderTracker();
+}
+
+function updateSidebarBadges(){
+  const ships=LS.get(KEY_SHIPMENTS);
+  const buyers=LS.get(KEY_BUYERS);
+  const tracker=LS.get(KEY_TRACKER);
+  document.getElementById('nb-buyers').textContent=buyers.length;
+  document.getElementById('nb-archive').textContent=ships.length;
+  document.getElementById('nb-tracker').textContent=tracker.length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ARCHIVE
+// ═══════════════════════════════════════════════════════════════
+function renderArchive(){
+  const ships=LS.get(KEY_SHIPMENTS);
+  const q=(document.getElementById('archive-search')?.value||'').toLowerCase();
+  const filtered=ships.filter(s=>{
+    if(!q)return true;
+    return JSON.stringify(s).toLowerCase().includes(q);
+  });
+  const tbody=document.getElementById('archive-body');
+  const empty=document.getElementById('archive-empty');
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=filtered.map(s=>{
+    const buyers=s.buyers?.map(b=>b.n||'—').join(', ')||'—';
+    const items=s.items?.map(i=>i.desc).join('; ')||'—';
+    const shortItems=items.length>60?items.substring(0,57)+'…':items;
+    return`<tr>
+      <td><span class="badge b-blue">${s.ino}</span></td>
+      <td>${fmtD(s.idate)}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${buyers}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--ink3);">${shortItems}</td>
+      <td class="nr">$${fN(Math.round(s.totalUSD))}</td>
+      <td class="nr">${fINR(s.totalINR)}</td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="loadFromArchive('${s.ino}')">📂 Load</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteArchive('${s.ino}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterArchive(){renderArchive();}
+function clearArchiveSearch(){document.getElementById('archive-search').value='';renderArchive();}
+
+function loadFromArchive(ino){
+  const ships=LS.get(KEY_SHIPMENTS);
+  const s=ships.find(x=>x.ino===ino);
+  if(!s)return;
+  SD={...s};
+  if(SD.packData&&SD.packData.length){imeiData=JSON.parse(JSON.stringify(SD.packData));renderImeiTable();}else{imeiData=[];}
+  // Restore pack list rows
+  document.getElementById('plbody').innerHTML='';
+  if(SD.packListEntries&&SD.packListEntries.length){SD.packListEntries.forEach(r=>addPackRow(false,r));}
+  activeBuyer=0;activeDoc='ci';
+  buildBuyerPills();
+    selDoc('ci');
+  document.getElementById('no-docs').style.display='none';
+  document.getElementById('docs-content').style.display='block';
+  document.getElementById('no-ins').style.display='none';
+  document.getElementById('ins-content').style.display='block';
+  document.getElementById('tb-sub').textContent=SD.ino+' — '+fmtD(SD.idate);
+  switchTab('invoice');
+  switchITab('docs');
+  showAlert('form-alert','a-ok',`Loaded ${ino} from archive. Viewing documents.`);
+}
+
+function deleteArchive(ino){
+  if(!confirm(`Delete shipment ${ino} from archive?`))return;
+  const ships=LS.get(KEY_SHIPMENTS).filter(s=>s.ino!==ino);
+  LS.set(KEY_SHIPMENTS,ships);
+  updateSidebarBadges();renderArchive();renderFinance();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRACKER
+// ═══════════════════════════════════════════════════════════════
+function renderTracker(){
+  const tracker=LS.get(KEY_TRACKER);
+  const tbody=document.getElementById('tracker-body');
+  const empty=document.getElementById('tracker-empty');
+  if(!tracker.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const statusBadge=(s)=>{
+    const map={Pending:'b-amber',Shipped:'b-blue',Delivered:'b-green',Cancelled:'b-red'};
+    const dot={Pending:'status-pending',Shipped:'status-shipped',Delivered:'status-delivered',Cancelled:'status-cancelled'};
+    return`<span class="badge ${map[s]||'b-gray'}"><span class="status-dot ${dot[s]||''}"></span>${s}</span>`;
+  };
+  tbody.innerHTML=tracker.map((t,i)=>`<tr>
+    <td><span class="badge b-blue">${t.ino}</span></td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.buyer||'—'}</td>
+    <td><input value="${t.awb||''}" placeholder="Enter AWB…" style="border:none;background:transparent;font-family:var(--sans);font-size:13px;width:140px;outline:none;border-bottom:1px solid var(--border);padding:2px 0;" onchange="updateTracker(${i},'awb',this.value)"></td>
+    <td><input value="${t.carrier||''}" placeholder="Carrier…" style="border:none;background:transparent;font-family:var(--sans);font-size:13px;width:120px;outline:none;border-bottom:1px solid var(--border);padding:2px 0;" onchange="updateTracker(${i},'carrier',this.value)"></td>
+    <td>${t.dispatchDate?fmtD(t.dispatchDate):'—'}</td>
+    <td>${t.dest||'—'}</td>
+    <td class="nr">$${fN(Math.round(t.valueUSD||0))}</td>
+    <td><select onchange="updateTracker(${i},'status',this.value)" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-family:var(--sans);font-size:12px;background:var(--surface);">
+      ${['Pending','Shipped','Delivered','Cancelled'].map(s=>`<option${s===t.status?' selected':''}>${s}</option>`).join('')}
+    </select></td>
+    <td><div style="display:flex;gap:6px;">
+      <button class="btn btn-ghost btn-sm" onclick="loadFromArchive('${t.ino}')">📄 Docs</button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteTracker(${i})">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function updateTracker(i,field,val){
+  const tracker=LS.get(KEY_TRACKER);
+  if(tracker[i])tracker[i][field]=val;
+  LS.set(KEY_TRACKER,tracker);
+  renderTracker();
+}
+function deleteTracker(i){
+  if(!confirm('Remove from tracker?'))return;
+  const tracker=LS.get(KEY_TRACKER);
+  tracker.splice(i,1);
+  LS.set(KEY_TRACKER,tracker);
+  updateSidebarBadges();renderTracker();
+}
+function openTrackerModal(){
+  const ino=prompt('Enter Invoice Number (e.g. EX/252613000065):');
+  if(!ino)return;
+  const tracker=LS.get(KEY_TRACKER);
+  tracker.push({ino:ino.trim(),buyer:'',awb:'',carrier:'',dispatchDate:new Date().toISOString().split('T')[0],dest:'',valueUSD:0,status:'Pending'});
+  LS.set(KEY_TRACKER,tracker);
+  updateSidebarBadges();renderTracker();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUYER DIRECTORY
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// INVENTORY MANAGEMENT
+// Data model:
+//   invPurchases  : [{id, date, state, supplier, product, hsn, qty, cost, total, billno, remarks, status}]
+//   invTransfers  : [{id, date, fromState, dest, product, qty, value, invno, awb, status, remarks}]
+//   invSales      : [{id, date, buyer, country, product, qty, price, total, invno, paymode, source, remarks}]
+// ═══════════════════════════════════════════════════════════════
+
+let invPurchases = [], invTransfers = [], invSales = [];
+
+function invLoad(){
+  try{ invPurchases = JSON.parse(localStorage.getItem('inv_purchases')||'[]'); }catch{invPurchases=[];}
+  try{ invTransfers = JSON.parse(localStorage.getItem('inv_transfers')||'[]'); }catch{invTransfers=[];}
+  try{ invSales     = JSON.parse(localStorage.getItem('inv_sales')||'[]'); }catch{invSales=[];}
+}
+
+function invSave(){
+  localStorage.setItem('inv_purchases', JSON.stringify(invPurchases));
+  localStorage.setItem('inv_transfers', JSON.stringify(invTransfers));
+  localStorage.setItem('inv_sales',     JSON.stringify(invSales));
+}
+
+function invUid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// ── Sub-tab switching ─────────────────────────────────────────
+function invSwitchTab(t){
+  ['purchase','sales','stock','transfer'].forEach(x=>{
+    document.getElementById('inv-tab-'+x)?.classList.toggle('active', x===t);
+    const p = document.getElementById('inv-panel-'+x);
+    if(p) p.style.display = x===t ? 'block' : 'none';
+  });
+  if(t==='stock') invRenderStock('all');
+}
+
+// ── Auto-calc totals on qty/cost input ────────────────────────
+document.addEventListener('input', e=>{
+  if(e.target.id==='inv-p-qty'||e.target.id==='inv-p-cost'){
+    const q=+document.getElementById('inv-p-qty').value||0;
+    const c=+document.getElementById('inv-p-cost').value||0;
+    document.getElementById('inv-p-total').value=(q*c).toFixed(2);
+  }
+  if(e.target.id==='inv-s-qty'||e.target.id==='inv-s-price'){
+    const q=+document.getElementById('inv-s-qty').value||0;
+    const p=+document.getElementById('inv-s-price').value||0;
+    document.getElementById('inv-s-total').value=(q*p).toFixed(2);
+  }
+});
+
+// ── PURCHASE ENTRIES ──────────────────────────────────────────
+function invAddPurchase(){
+  const date     = document.getElementById('inv-p-date').value;
+  const state    = document.getElementById('inv-p-state').value;
+  const supplier = document.getElementById('inv-p-supplier').value.trim();
+  const product  = document.getElementById('inv-p-product').value.trim();
+  const hsn      = document.getElementById('inv-p-hsn').value.trim();
+  const qty      = +document.getElementById('inv-p-qty').value;
+  const cost     = +document.getElementById('inv-p-cost').value;
+  const billno   = document.getElementById('inv-p-billno').value.trim();
+  const remarks  = document.getElementById('inv-p-remarks').value.trim();
+
+  if(!date||!state||!product||!qty||!cost){
+    alert('Please fill in: Date, State, Product, Quantity and Unit Cost.');
+    return;
+  }
+
+  invPurchases.push({
+    id:invUid(), date, state, supplier, product, hsn,
+    qty, cost, total:+(qty*cost).toFixed(2),
+    billno, remarks, status:'in-stock'
+  });
+  invSave();
+  invRenderPurchases();
+
+  // Clear form
+  ['inv-p-date','inv-p-supplier','inv-p-product','inv-p-hsn',
+   'inv-p-qty','inv-p-cost','inv-p-total','inv-p-billno','inv-p-remarks']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('inv-p-state').value='';
+}
+
+function invRenderPurchases(){
+  const tbody = document.getElementById('inv-purchase-body');
+  if(!invPurchases.length){
+    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--ink3);padding:24px;">No purchase entries yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...invPurchases].reverse().map(p=>{
+    const statusColor = {
+      'in-stock':'var(--green)',
+      'shipped':'var(--amber)',
+      'sold':'var(--ink3)'
+    }[p.status]||'var(--ink3)';
+    const statusLabel = {'in-stock':'In Stock','shipped':'Shipped','sold':'Sold'}[p.status]||p.status;
+    return `<tr>
+      <td>${fmtD(p.date)}</td>
+      <td>${p.state}</td>
+      <td>${p.supplier||'—'}</td>
+      <td style="font-weight:600;">${p.product}</td>
+      <td>${p.hsn||'—'}</td>
+      <td style="text-align:right;">${fN(p.qty)}</td>
+      <td style="text-align:right;">₹${fN(p.cost)}</td>
+      <td style="text-align:right;font-weight:600;">₹${fN(p.total)}</td>
+      <td>${p.billno||'—'}</td>
+      <td><span style="color:${statusColor};font-weight:600;font-size:11px;">${statusLabel}</span></td>
+      <td><button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px;" onclick="invDeletePurchase('${p.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function invDeletePurchase(id){
+  if(!confirm('Delete this purchase entry?')) return;
+  invPurchases = invPurchases.filter(p=>p.id!==id);
+  invSave();
+  invRenderPurchases();
+}
+
+// ── SALES ENTRIES ─────────────────────────────────────────────
+function invAddSale(){
+  const date    = document.getElementById('inv-s-date').value;
+  const buyer   = document.getElementById('inv-s-buyer').value.trim();
+  const country = document.getElementById('inv-s-country').value.trim();
+  const product = document.getElementById('inv-s-product').value.trim();
+  const qty     = +document.getElementById('inv-s-qty').value;
+  const price   = +document.getElementById('inv-s-price').value;
+  const invno   = document.getElementById('inv-s-invno').value.trim();
+  const paymode = document.getElementById('inv-s-paymode').value;
+  const source  = document.getElementById('inv-s-source').value;
+  const remarks = document.getElementById('inv-s-remarks').value.trim();
+
+  if(!date||!buyer||!product||!qty||!price){
+    alert('Please fill in: Date, Buyer, Product, Quantity and Unit Price.');
+    return;
+  }
+
+  invSales.push({
+    id:invUid(), date, buyer, country, product,
+    qty, price, total:+(qty*price).toFixed(2),
+    invno, paymode, source, remarks
+  });
+
+  // If sold from destination stock, mark matching transfer units as paid
+  if(source==='destination'){
+    let remaining = qty;
+    for(const t of invTransfers){
+      if(t.product===product && t.dest===country && t.status==='delivered' && remaining>0){
+        const take = Math.min(t.qty, remaining);
+        t.qty -= take;
+        remaining -= take;
+        if(t.qty<=0) t.status='paid';
+      }
+    }
+  }
+
+  invSave();
+  invRenderSales();
+  invRenderTransfers();
+
+  ['inv-s-date','inv-s-buyer','inv-s-country','inv-s-product',
+   'inv-s-qty','inv-s-price','inv-s-total','inv-s-invno','inv-s-remarks']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function invRenderSales(){
+  const tbody = document.getElementById('inv-sales-body');
+  if(!invSales.length){
+    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--ink3);padding:24px;">No sales entries yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...invSales].reverse().map(s=>`<tr>
+    <td>${fmtD(s.date)}</td>
+    <td style="font-weight:600;">${s.buyer}</td>
+    <td>${s.country||'—'}</td>
+    <td>${s.product}</td>
+    <td style="text-align:right;">${fN(s.qty)}</td>
+    <td style="text-align:right;">$${s.price.toFixed(2)}</td>
+    <td style="text-align:right;font-weight:600;">$${fN(s.total)}</td>
+    <td>${s.invno||'—'}</td>
+    <td style="font-size:11px;">${s.paymode}</td>
+    <td style="font-size:11px;color:var(--ink3);">${s.source==='india'?'India':'Destination'}</td>
+    <td><button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px;" onclick="invDeleteSale('${s.id}')">✕</button></td>
+  </tr>`).join('');
+}
+
+function invDeleteSale(id){
+  if(!confirm('Delete this sale entry?')) return;
+  invSales = invSales.filter(s=>s.id!==id);
+  invSave();
+  invRenderSales();
+}
+
+// ── SHIPMENT TRANSFERS ────────────────────────────────────────
+function invAddTransfer(){
+  const date      = document.getElementById('inv-t-date').value;
+  const fromState = document.getElementById('inv-t-from-state').value;
+  const dest      = document.getElementById('inv-t-dest').value.trim();
+  const product   = document.getElementById('inv-t-product').value.trim();
+  const qty       = +document.getElementById('inv-t-qty').value;
+  const invno     = document.getElementById('inv-t-invno').value.trim();
+  const awb       = document.getElementById('inv-t-awb').value.trim();
+  const value     = +document.getElementById('inv-t-value').value;
+  const status    = document.getElementById('inv-t-status').value;
+  const remarks   = document.getElementById('inv-t-remarks').value.trim();
+
+  if(!date||!fromState||!dest||!product||!qty){
+    alert('Please fill in: Date, From State, Destination, Product and Quantity.');
+    return;
+  }
+
+  invTransfers.push({id:invUid(), date, fromState, dest, product, qty, value, invno, awb, status, remarks});
+
+  // Mark matching India purchase stock as shipped
+  let remaining = qty;
+  for(const p of invPurchases){
+    if(p.product===product && p.state===fromState && p.status==='in-stock' && remaining>0){
+      p.status='shipped';
+      remaining -= p.qty;
+    }
+  }
+
+  invSave();
+  invRenderTransfers();
+  invRenderPurchases();
+
+  ['inv-t-date','inv-t-dest','inv-t-product','inv-t-qty',
+   'inv-t-invno','inv-t-awb','inv-t-value','inv-t-remarks']
+    .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('inv-t-from-state').value='';
+  document.getElementById('inv-t-status').value='in-transit';
+}
+
+function invRenderTransfers(){
+  const tbody = document.getElementById('inv-transfer-body');
+  if(!invTransfers.length){
+    tbody.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--ink3);padding:24px;">No transfers recorded yet</td></tr>';
+    return;
+  }
+  const statusColor = {'in-transit':'var(--accent)','delivered':'var(--amber)','paid':'var(--green)'};
+  const statusLabel = {'in-transit':'In Transit','delivered':'Delivered','paid':'Paid / Cleared'};
+  tbody.innerHTML = [...invTransfers].reverse().map(t=>`<tr>
+    <td>${fmtD(t.date)}</td>
+    <td>${t.fromState}</td>
+    <td style="font-weight:600;">${t.dest}</td>
+    <td>${t.product}</td>
+    <td style="text-align:right;">${fN(t.qty)}</td>
+    <td style="text-align:right;">${t.value?'$'+fN(t.value):'—'}</td>
+    <td style="font-size:11px;">${t.invno||'—'}</td>
+    <td style="font-size:11px;font-family:monospace;">${t.awb||'—'}</td>
+    <td>
+      <select style="font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;"
+        onchange="invUpdateTransferStatus('${t.id}',this.value)">
+        ${['in-transit','delivered','paid'].map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${statusLabel[s]}</option>`).join('')}
+      </select>
+    </td>
+    <td><button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px;" onclick="invDeleteTransfer('${t.id}')">✕</button></td>
+  </tr>`).join('');
+}
+
+function invUpdateTransferStatus(id, newStatus){
+  const t = invTransfers.find(x=>x.id===id);
+  if(t){ t.status=newStatus; invSave(); }
+}
+
+function invDeleteTransfer(id){
+  if(!confirm('Delete this transfer?')) return;
+  invTransfers = invTransfers.filter(t=>t.id!==id);
+  invSave();
+  invRenderTransfers();
+}
+
+// ── STOCK VIEW ────────────────────────────────────────────────
+function invRenderStock(filter){
+  const search = (document.getElementById('inv-stock-search')?.value||'').toLowerCase();
+
+  // Build stock map: {location: {product: {qty, value, entries:[]}}}
+  const stock = {};
+
+  const addStock = (loc, product, qty, value) => {
+    if(!stock[loc]) stock[loc]={};
+    if(!stock[loc][product]) stock[loc][product]={qty:0, value:0};
+    stock[loc][product].qty   += qty;
+    stock[loc][product].value += value;
+  };
+
+  // India stock: purchases that are still 'in-stock'
+  for(const p of invPurchases){
+    if(p.status==='in-stock'){
+      const loc = 'India — ' + p.state;
+      addStock(loc, p.product, p.qty, p.total);
+    }
+  }
+
+  // Destination stock: transfers that are 'delivered' (awaiting payment)
+  for(const t of invTransfers){
+    if(t.status==='delivered'){
+      addStock(t.dest, t.product, t.qty, t.value||0);
+    }
+  }
+
+  // Apply location filter
+  const locations = Object.keys(stock).filter(loc=>{
+    if(filter==='india') return loc.startsWith('India');
+    if(filter==='export') return !loc.startsWith('India');
+    return true;
+  }).sort((a,b)=>{
+    // India first, then alphabetical
+    if(a.startsWith('India') && !b.startsWith('India')) return -1;
+    if(!a.startsWith('India') && b.startsWith('India')) return 1;
+    return a.localeCompare(b);
+  });
+
+  const container = document.getElementById('inv-stock-content');
+  if(!locations.length){
+    container.innerHTML='<div style="text-align:center;color:var(--ink3);padding:40px;">No stock currently in inventory.</div>';
+    return;
+  }
+
+  let html = '';
+  for(const loc of locations){
+    const products = Object.entries(stock[loc]).filter(([prod])=>!search||prod.toLowerCase().includes(search));
+    if(!products.length) continue;
+
+    const totalQty   = products.reduce((s,[,v])=>s+v.qty,0);
+    const totalValue = products.reduce((s,[,v])=>s+v.value,0);
+    const isIndia    = loc.startsWith('India');
+    const locColor   = isIndia ? '#166534' : '#1d4ed8';
+    const locBg      = isIndia ? '#dcfce7' : '#dbeafe';
+
+    html += `
+    <div style="margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;">
+      <div style="background:${locBg};padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-weight:700;font-size:14px;color:${locColor};">
+          ${isIndia?'🇮🇳':'🌍'} ${loc}
+        </div>
+        <div style="font-size:12px;color:${locColor};">
+          Total: <strong>${fN(totalQty)} pcs</strong>
+          ${isIndia?' &nbsp;·&nbsp; ₹'+fN(totalValue.toFixed(0)):' &nbsp;·&nbsp; $'+fN(totalValue.toFixed(0))}
+        </div>
+      </div>
+      <table class="itable" style="margin:0;">
+        <thead><tr>
+          <th>Product / Model</th>
+          <th style="text-align:right;">Qty (Pcs)</th>
+          <th style="text-align:right;">${isIndia?'Value (₹)':'Value (USD)'}</th>
+          <th style="text-align:right;">Avg Cost</th>
+        </tr></thead>
+        <tbody>
+          ${products.map(([prod,d])=>`
+          <tr>
+            <td style="font-weight:600;">${prod}</td>
+            <td style="text-align:right;">${fN(d.qty)}</td>
+            <td style="text-align:right;">${isIndia?'₹':'$'}${fN(d.value.toFixed(0))}</td>
+            <td style="text-align:right;color:var(--ink2);">${isIndia?'₹':'$'}${d.qty?fN((d.value/d.qty).toFixed(0)):'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  container.innerHTML = html || '<div style="text-align:center;color:var(--ink3);padding:40px;">No matching stock.</div>';
+}
+
+function invRender(){
+  invRenderPurchases();
+  invRenderSales();
+  invRenderTransfers();
+}
+
+
+function renderBuyerDirectory(){
+  const buyers=LS.get(KEY_BUYERS);
+  const grid=document.getElementById('buyer-grid');
+  const empty=document.getElementById('buyers-empty');
+  if(!buyers.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=buyers.map((b,i)=>{
+    const initials=(b.name||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    return`<div class="buyer-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="buyer-avatar">${initials}</div>
+        <div>
+          <div style="font-weight:700;font-size:13.5px;">${b.name}</div>
+          <div style="font-size:11px;color:var(--ink3);">${b.country||'—'}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--ink2);line-height:1.7;border-top:1px solid var(--border);padding-top:10px;">
+        ${b.addr1?`<div>${b.addr1}</div>`:''}
+        ${b.addr2?`<div>${b.addr2}</div>`:''}
+        ${b.trn?`<div style="color:var(--ink3);">TRN: ${b.trn}</div>`:''}
+        ${b.contact?`<div>📞 ${b.contact}</div>`:''}
+        <div style="margin-top:6px;"><span class="tag">Pay: ${b.payterm||'—'}</span></div>
+      </div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-ghost btn-sm" onclick="editBuyer(${i})">✏ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBuyer(${i})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openBuyerModal(editIdx){
+  editingBuyerIdx=editIdx!==undefined?editIdx:null;
+  const buyers=LS.get(KEY_BUYERS);
+  const b=editIdx!==undefined?buyers[editIdx]:null;
+  document.getElementById('bm-title').textContent=b?'Edit Buyer':'Add New Buyer';
+  ['name','a1','a2','trn','con','cy','pay','notes'].forEach(f=>{
+    const el=document.getElementById('bm-'+f);
+    if(el)el.value=b?(f==='name'?b.name:f==='a1'?b.addr1:f==='a2'?b.addr2:f==='trn'?b.trn:f==='con'?b.contact:f==='cy'?b.country:f==='pay'?b.payterm:b.notes||''):'';
+  });
+  document.getElementById('buyer-modal').classList.add('show');
+}
+function closeBuyerModal(){document.getElementById('buyer-modal').classList.remove('show');}
+
+function saveBuyerModal(){
+  const name=document.getElementById('bm-name').value.trim();
+  if(!name){alert('Company name is required.');return;}
+  const buyer={name,addr1:g('bm-a1'),addr2:g('bm-a2'),trn:g('bm-trn'),contact:g('bm-con'),country:g('bm-cy')||'U.A.E.',payterm:g('bm-pay')||'After Inspection',notes:g('bm-notes'),createdAt:new Date().toISOString()};
+  const buyers=LS.get(KEY_BUYERS);
+  if(editingBuyerIdx!==null&&editingBuyerIdx!==undefined){buyers[editingBuyerIdx]={...buyers[editingBuyerIdx],...buyer};}
+  else{buyers.push(buyer);}
+  LS.set(KEY_BUYERS,buyers);
+  closeBuyerModal();
+  updateSidebarBadges();
+  renderBuyerDirectory();
+}
+function editBuyer(i){openBuyerModal(i);}
+function deleteBuyer(i){
+  if(!confirm('Delete this buyer?'))return;
+  const buyers=LS.get(KEY_BUYERS);buyers.splice(i,1);
+  LS.set(KEY_BUYERS,buyers);updateSidebarBadges();renderBuyerDirectory();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FINANCIAL DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderFinance(){
+  const ships=LS.get(KEY_SHIPMENTS);
+  const empty=document.getElementById('finance-empty');
+  const content=document.getElementById('finance-content');
+  if(!ships.length){empty.style.display='block';content.style.display='none';return;}
+  empty.style.display='none';content.style.display='block';
+
+  const totalUSD=ships.reduce((s,x)=>s+x.totalUSD,0);
+  const totalINR=ships.reduce((s,x)=>s+x.totalINR,0);
+  const totalIGST=ships.reduce((s,x)=>s+x.igstAmt,0);
+  const totalPcs=ships.reduce((s,x)=>s+x.totalPcs,0);
+
+  document.getElementById('metric-grid').innerHTML=`
+    <div class="metric"><span class="metric-icon">🧾</span><div class="metric-lbl">Total Shipments</div><div class="metric-val">${ships.length}</div></div>
+    <div class="metric"><span class="metric-icon">💵</span><div class="metric-lbl">Total Export Value</div><div class="metric-val">$${fN(Math.round(totalUSD))}</div><div class="metric-sub">CIF USD</div></div>
+    <div class="metric"><span class="metric-icon">🇮🇳</span><div class="metric-lbl">Taxable Value (INR)</div><div class="metric-val">₹${fN(Math.round(totalINR/100000))}L</div><div class="metric-sub">${fINR(totalINR)}</div></div>
+    <div class="metric"><span class="metric-icon">📋</span><div class="metric-lbl">Total IGST</div><div class="metric-val">${fINR(Math.round(totalIGST))}</div></div>
+    <div class="metric"><span class="metric-icon">📦</span><div class="metric-lbl">Total Units Exported</div><div class="metric-val">${fN(totalPcs)}</div><div class="metric-sub">pieces</div></div>
+    <div class="metric"><span class="metric-icon">💱</span><div class="metric-lbl">Avg Exchange Rate</div><div class="metric-val">₹${(ships.reduce((s,x)=>s+x.xrate,0)/ships.length).toFixed(2)}</div><div class="metric-sub">per USD</div></div>`;
+
+  // Monthly chart
+  const monthly={};
+  ships.forEach(s=>{const m=s.idate?s.idate.substring(0,7):'?';monthly[m]=(monthly[m]||0)+s.totalUSD;});
+  const months=Object.keys(monthly).sort().slice(-6);
+  const maxVal=Math.max(...months.map(m=>monthly[m]),1);
+  document.getElementById('monthly-chart').innerHTML=months.map(m=>{
+    const pct=Math.round((monthly[m]/maxVal)*100);
+    const shortM=new Date(m+'-01').toLocaleDateString('en-IN',{month:'short',year:'2-digit'});
+    return`<div class="chart-bar-col">
+      <div class="chart-bar-val">$${fN(Math.round(monthly[m]/1000))}k</div>
+      <div class="chart-bar" style="height:${Math.max(pct,4)}%"></div>
+      <div class="chart-bar-lbl">${shortM}</div>
+    </div>`;
+  }).join('');
+
+  // Buyer breakdown
+  const buyerTotals={};
+  ships.forEach(s=>s.buyers?.forEach(b=>{const n=b.n||'Unknown';buyerTotals[n]=(buyerTotals[n]||0)+s.totalUSD/s.buyers.length;}));
+  const topBuyers=Object.entries(buyerTotals).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxB=Math.max(...topBuyers.map(x=>x[1]),1);
+  document.getElementById('buyer-chart').innerHTML=topBuyers.map(([name,val])=>{
+    const pct=Math.round(val/maxB*100);
+    const shortName=name.length>22?name.substring(0,20)+'…':name;
+    return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--ink2);min-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${shortName}</div>
+      <div style="flex:1;background:var(--s2);border-radius:4px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;background:var(--accent);height:100%;border-radius:4px;transition:width .4s;"></div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--accent);min-width:70px;text-align:right;">$${fN(Math.round(val))}</div>
+    </div>`;
+  }).join('');
+
+  // Finance table
+  document.getElementById('finance-tbody').innerHTML=ships.map(s=>`<tr>
+    <td><span class="badge b-blue">${s.ino}</span></td>
+    <td>${fmtD(s.idate)}</td>
+    <td style="font-size:12px;">${s.buyers?.map(b=>b.n||'—').join(', ')||'—'}</td>
+    <td class="nr">$${fN(Math.round(s.totalUSD))}</td>
+    <td class="nr">${fINR(s.totalINR)}</td>
+    <td class="nr">${fINR(s.igstAmt)}</td>
+    <td class="nr">${fINR(s.invINR)}</td>
+    <td class="nc">₹${s.xrate}</td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// SERIAL / IMEI IMPORT
+// ═══════════════════════════════════════════════════════════════
+window._serialData = []; // [{box:int, serial:string}]
+
+function parseSerialFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+
+  if(ext === 'csv'){
+    reader.onload = e => {
+      const lines = e.target.result.split(/\r?\n/).filter(l=>l.trim());
+      const data = [];
+      lines.forEach((line,i) => {
+        const cols = line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+        if(cols.length>=2 && cols[1]){
+          // Col A = box number, Col B = serial
+          const boxNum = parseInt(cols[0]);
+          data.push({box: isNaN(boxNum)?null:boxNum, serial: cols[1]});
+        } else if(cols[0]) {
+          // Single column — just serials, auto-number
+          data.push({box: null, serial: cols[0]});
+        }
+      });
+      applySerialData(data, file.name);
+    };
+    reader.readAsText(file);
+  } else {
+    // Excel — use SheetJS
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+        const data = [];
+        rows.forEach((row, i) => {
+          if(!row || row.length===0) return;
+          const col0 = String(row[0]||'').trim();
+          const col1 = String(row[1]||'').trim();
+          if(col0 && col1){
+            // Col A = box number, Col B = serial/IMEI
+            const boxNum = parseInt(col0);
+            if(!isNaN(boxNum)){
+              data.push({box: boxNum, serial: col1});
+            } else {
+              // Col A is description text (header row) — skip
+              if(i>0) data.push({box: null, serial: col0});
+            }
+          } else if(col0 && !col1){
+            // Single column of serials
+            if(isNaN(parseInt(col0))||col0.length>5) data.push({box: null, serial: col0});
+          }
+        });
+        applySerialData(data, file.name);
+      } catch(err){
+        document.getElementById('serial-summary').textContent = 'Error reading Excel: ' + err.message;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function applySerialData(data, filename){
+  // Filter out blanks and headers
+  const clean = data.filter(d=>d.serial && d.serial.length>3 && isNaN(d.serial)===false || d.serial.length>5);
+  window._serialData = clean;
+
+  const summary = document.getElementById('serial-summary');
+  const preview = document.getElementById('serial-preview');
+  const previewBody = document.getElementById('serial-preview-body');
+  const clearBtn = document.getElementById('serial-clear-btn');
+
+  if(!clean.length){
+    summary.textContent = 'No valid serials found in file. Check format: Col A = Box No., Col B = Serial/IMEI.';
+    return;
+  }
+
+  summary.innerHTML = `<span style="color:var(--green);font-weight:600;">✓ ${clean.length} serials loaded</span> from <em>${filename}</em>`;
+  preview.style.display = 'block';
+  clearBtn.style.display = 'inline-flex';
+
+  // Show first 20 in preview
+  previewBody.innerHTML = clean.slice(0,20).map(d=>
+    `<tr><td style="padding:2px 8px;border-bottom:0.5px solid var(--border);">${d.box||'—'}</td><td style="padding:2px 8px;border-bottom:0.5px solid var(--border);font-family:monospace;">${d.serial}</td></tr>`
+  ).join('') + (clean.length>20?`<tr><td colspan="2" style="padding:4px 8px;color:var(--ink3);font-style:italic;">… and ${clean.length-20} more</td></tr>`:'');
+}
+
+function clearSerials(){
+  window._serialData = [];
+  document.getElementById('serial-file').value = '';
+  document.getElementById('serial-summary').textContent = 'No file loaded — packing list will show quantities only.';
+  document.getElementById('serial-preview').style.display = 'none';
+  document.getElementById('serial-clear-btn').style.display = 'none';
+}
+
+
+function printDoc(){
+  // Show print tips overlay first
+  const overlay = document.getElementById('print-tips-overlay');
+  if(overlay) overlay.style.display='flex';
+  else window.print();
+}
+function doPrint(){
+  const overlay = document.getElementById('print-tips-overlay');
+  if(overlay) overlay.style.display='none';
+  window.print();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INSURANCE MAIL TAB
+// ═══════════════════════════════════════════════════════════════
+
+function initInsMail(){
+  // Populate fields from current shipment data if available
+  const warn = document.getElementById('no-shipment-warn');
+  if(!SD){
+    if(warn) warn.style.display='block';
+  } else {
+    if(warn) warn.style.display='none';
+    const invNo = document.getElementById('ins-inv-no');
+    const invDate = document.getElementById('ins-inv-date');
+    const consignee = document.getElementById('ins-consignee');
+    const dest = document.getElementById('ins-dest');
+    const cif = document.getElementById('ins-cif');
+    if(invNo && !invNo.value)   invNo.value   = SD.ino || '';
+    if(invDate && !invDate.value) invDate.value = SD.idate || '';
+    if(consignee && !consignee.value) consignee.value = SD.cn || '';
+    if(dest && !dest.value)     dest.value     = SD.dest || '';
+    if(cif && !cif.value)       cif.value      = SD.totalUSD ? fN(Math.round(SD.totalUSD)) : '';
+  }
+  rebuildInsMail();
+  // Update attachment filename span
+  const attachSpan = document.getElementById('ins-attach-ino');
+  if(attachSpan && SD) attachSpan.textContent = SD.ino;
+}
+
+function onAWBInput(val){
+  // Normalise: 11 digits no hyphen → insert after 3rd digit
+  let clean = val.replace(/[^0-9\-]/g,'');
+  if(/^\d{11}$/.test(clean)){
+    clean = clean.slice(0,3)+'-'+clean.slice(3);
+    document.getElementById('awb-number').value = clean;
+  }
+  rebuildInsMail();
+}
+
+
+function rebuildInsMail(){
+  const awb       = (document.getElementById('awb-number')?.value || '').trim() || '[AWB NUMBER]';
+  const invNo     = (document.getElementById('ins-inv-no')?.value || '').trim() || '[INVOICE NUMBER]';
+  const invDate   = document.getElementById('ins-inv-date')?.value || '';
+  const carrier   = (document.getElementById('ins-carrier')?.value || '').trim() || '[CARRIER]';
+  const consignee = (document.getElementById('ins-consignee')?.value || '').trim() || '[CONSIGNEE]';
+  const dest      = (document.getElementById('ins-dest')?.value || '').trim() || '[DESTINATION]';
+  const cif       = (document.getElementById('ins-cif')?.value || '').trim() || '[CIF VALUE]';
+  const exCo      = SD ? SD.ex.co : 'LOGICA INFOWAY LIMITED';
+  const exA1      = SD ? SD.ex.a1 : '';
+  const exA2      = SD ? SD.ex.a2 : '';
+  const exEmail   = SD ? SD.ex.email : 'info@logicainfoway.com';
+  const exCont    = SD ? SD.ex.cont : '';
+  const invDateFmt = invDate ? fmtD(invDate) : '[DATE]';
+
+  const subject = document.getElementById('ins-subject');
+  const body    = document.getElementById('ins-body');
+
+  if(subject) subject.value = `Marine Cargo Insurance Certificate Request — AWB ${awb} — Invoice ${invNo}`;
+
+  if(body) body.value =
+`Dear Sir / Madam,
+
+We request you to kindly issue a Marine Cargo Insurance Certificate for the following shipment:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SHIPMENT DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AWB Number    : ${awb}
+Carrier       : ${carrier}
+Invoice No.   : ${invNo}
+Invoice Date  : ${invDateFmt}
+Consignee     : ${consignee}
+Destination   : ${dest}
+CIF Value     : USD ${cif}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INSURANCE REQUIREMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Please issue the Marine Insurance Certificate covering All Risks (Institute Cargo Clauses A) for the above shipment.
+
+The Commercial Invoice is attached herewith for your reference.
+
+Kindly forward the Insurance Certificate at the earliest so we may include it in the shipping document set.
+
+For any clarification, please do not hesitate to contact us.
+
+Warm regards,
+${exCo}
+${exA1}
+${exA2}
+Tel: ${exCont}
+Email: ${exEmail}`;
+}
+
+function sendViaGmail(){
+  const subject  = document.getElementById('ins-subject')?.value || '';
+  const bodyText = document.getElementById('ins-body')?.value || '';
+
+  // ── Step 1: Download CI as HTML file (silent, no dialog) ──────────────────
+  if(SD){
+    try{
+      const b      = SD.buyers[activeBuyer]||SD.buyers[0];
+      const invNo  = SD.ino+(b.sfx||'');
+      const ctx    = {...SD, b, invNo, piNo:invNo.replace('EX/','PI/'), payterm:b.pay||SD.pterm};
+      const ciHTML = rCI(ctx);
+      const styles = document.querySelector('style').textContent;
+
+      const fullHTML =
+        '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Commercial Invoice '+invNo+'</title>'+
+        '<style>body{font-family:Georgia,serif;font-size:11.5px;color:#111;padding:30px 38px;margin:0;}'+
+        styles+'</style></head><body>'+ciHTML+'</body></html>';
+
+      // Create blob and trigger download silently
+      const blob = new Blob([fullHTML], {type:'text/html'});
+      const a    = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = 'Commercial_Invoice_'+invNo+'.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    } catch(e){
+      console.error('CI download error:', e);
+    }
+  }
+
+  // ── Step 2: Copy body to clipboard ─────────────────────────────────────────
+  if(bodyText){
+    navigator.clipboard.writeText(bodyText).catch(()=>{});
+  }
+
+  // ── Step 3: Open Gmail compose with subject + body pre-filled ──────────────
+  // Gmail compose URL supports su= (subject) and body= (body text)
+  // Body is truncated by Chrome at ~2000 chars in the URL, so we also copy to clipboard
+  const gmailUrl =
+    'https://mail.google.com/mail/?view=cm&fs=1' +
+    '&su=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(bodyText);
+
+  window.open(gmailUrl, '_blank');
+
+  // ── Step 4: Show instruction banner ────────────────────────────────────────
+  showGmailInstructions(SD ? SD.ino+(SD.buyers[activeBuyer]?.sfx||'') : '');
+}
+
+function showGmailInstructions(invNo){
+  // Remove existing banner if any
+  const existing = document.getElementById('gmail-instruction-banner');
+  if(existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'gmail-instruction-banner';
+  banner.style.cssText =
+    'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'+
+    'background:#166534;color:#fff;border-radius:10px;padding:14px 22px;'+
+    'font-size:13px;font-weight:600;line-height:1.7;box-shadow:0 4px 20px rgba(0,0,0,0.3);'+
+    'z-index:9999;max-width:520px;text-align:center;';
+  banner.innerHTML =
+    '✓ Gmail is opening &amp; mail body is copied to clipboard<br>'+
+    '<span style="font-weight:400;font-size:12px;">'+
+    '1. In Gmail: paste the body (Ctrl+V / Cmd+V) if not pre-filled &nbsp;·&nbsp; '+
+    '2. Click the 📎 clip icon and attach <strong>Commercial_Invoice_'+invNo+'.html</strong> from your Downloads'+
+    '</span>'+
+    '<button onclick="this.parentElement.remove()" style="'+
+    'margin-left:14px;background:rgba(255,255,255,0.2);border:none;'+
+    'color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;">✕</button>';
+  document.body.appendChild(banner);
+  // Auto-dismiss after 12 seconds
+  setTimeout(()=>banner.remove(), 12000);
+}
+
+
+function copyInsMail(){
+  const body = document.getElementById('ins-body')?.value || '';
+  if(!body) return;
+  navigator.clipboard.writeText(body).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  });
+}
+
+
+function g(id){const e=document.getElementById(id);return e?e.value:'';}
+function fN(n){return(+n).toLocaleString('en-IN');}
+function fINR(n){return'₹'+Math.round(n).toLocaleString('en-IN');}
+function fmtD(s){if(!s)return'';const d=new Date(s);return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
+function showAlert(id,cls,msg){const e=document.getElementById(id);if(!e)return;e.className=`alert ${cls} show`;e.textContent=msg;setTimeout(()=>e.classList.remove('show'),5000);}
+function showL(m){document.getElementById('ltxt').textContent=m||'';document.getElementById('loader').classList.add('show');}
+function hideL(){document.getElementById('loader').classList.remove('show');}
+function resetForm(){if(!confirm('Reset form?'))return;document.getElementById('ibody').innerHTML='';addItem(false);document.getElementById('plbody').innerHTML='';addPackRow(true);imeiData=[];document.getElementById('imei-card').style.display='none';document.getElementById('pack-file-badge').style.display='none';document.getElementById('pack-file-input').value='';SD=null;}
+
+function n2w(n){
+  const a=['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
+  const b=['','','TWENTY','THIRTY','FORTY','FIFTY','SIXTY','SEVENTY','EIGHTY','NINETY'];
+  if(!n)return'ZERO';
+  function w(x){if(x<20)return a[x];if(x<100)return b[Math.floor(x/10)]+(x%10?' '+a[x%10]:'');if(x<1000)return a[Math.floor(x/100)]+' HUNDRED'+(x%100?' '+w(x%100):'');if(x<100000)return w(Math.floor(x/1000))+' THOUSAND'+(x%1000?' '+w(x%1000):'');if(x<10000000)return w(Math.floor(x/100000))+' LAKH'+(x%100000?' '+w(x%100000):'');return w(Math.floor(x/10000000))+' CRORE'+(x%10000000?' '+w(x%10000000):'');}
+  return w(n);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PACKING LIST TABLE (same style as Line Items)
+// ═══════════════════════════════════════════════════════════════
+let imeiData=[];  // IMEI-level rows from Excel upload
+
+function escH(s){return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+function addPackRow(isDefault,pre){
+  const tr=document.createElement('tr');
+  const bx=pre?escH(pre.boxLabel):(isDefault?'1':'');
+  const nb=pre?pre.numBoxes:(isDefault?1:'');
+  const ds=pre?escH(pre.desc):(isDefault?'':'');
+  const pc=pre?pre.pcsPerBox:(isDefault?'':'');
+  const tp=pre?(pre.totalPcs||pre.numBoxes*pre.pcsPerBox):'';
+  tr.innerHTML=`
+    <td><input type="text" value="${bx}" placeholder="e.g. 1 or 6 TO 8"></td>
+    <td><input type="number" value="${nb}" placeholder="1" min="1" oninput="rcPack(this)"></td>
+    <td><input type="text" value="${ds}" placeholder="Description of goods"></td>
+    <td><input type="number" value="${pc}" placeholder="0" min="1" oninput="rcPack(this)"></td>
+    <td><input type="number" value="${tp}" readonly></td>
+    <td><button class="ic-btn" onclick="this.closest('tr').remove()" title="Remove row">✕</button></td>`;
+  document.getElementById('plbody').appendChild(tr);
+}
+
+function rcPack(el){
+  const tr=el.closest('tr');
+  const ins=tr.querySelectorAll('input');
+  const nb=parseFloat(ins[1].value)||0;
+  const pc=parseFloat(ins[3].value)||0;
+  ins[4].value=nb*pc;
+}
+
+function getPackListEntries(){
+  const rows=[...document.querySelectorAll('#plbody tr')];
+  if(!rows.length)return null;
+  const entries=rows.map(tr=>{
+    const ins=tr.querySelectorAll('input');
+    const boxLabel=ins[0].value.trim();
+    const numBoxes=+ins[1].value||1;
+    const desc=ins[2].value.trim();
+    const pcsPerBox=+ins[3].value||0;
+    if(!desc)return null;
+    return{boxLabel,numBoxes,desc,pcsPerBox,totalPcs:numBoxes*pcsPerBox};
+  }).filter(Boolean);
+  return entries.length?entries:null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXCEL UPLOAD → fills both Packing List table + IMEI card
+// ═══════════════════════════════════════════════════════════════
+function handlePackFileUpload(e){
+  const file=e.target.files?.[0];
+  if(!file)return;
+  showL('Reading logistics Excel…');
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=new Uint8Array(ev.target.result);
+      const wb=XLSX.read(data,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      parseExcelPack(rows,file.name);
+      hideL();
+    }catch(err){hideL();alert('Error reading file: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseExcelPack(rows,fileName){
+  const aliases={
+    sno:['s no','s no.','sno','sr no','sr no.','#','sl no','sl no.'],
+    box:['box no','box no.','box','box number','carton','carton no','carton no.'],
+    imei:['imei no','imei no.','imei','serial no','serial no.','serial number','imei/serial'],
+    model:['model name','model','product','product name','item','description','goods'],
+    color:['color','colour','clr','shade'],
+    party:['party name','party','customer','buyer','client'],
+    bill:['bill no','bill no.','bill','invoice','invoice no','invoice no.'],
+  };
+  let headerIdx=-1;
+  let colMap={sno:-1,box:-1,imei:-1,model:-1,color:-1,party:-1,bill:-1};
+  for(let r=0;r<Math.min(rows.length,10);r++){
+    const cells=rows[r].map(c=>String(c).trim().toLowerCase());
+    let matched=0;const tryMap={...colMap};
+    for(const[key,al] of Object.entries(aliases)){
+      const idx=cells.findIndex(c=>al.includes(c));
+      if(idx>=0){tryMap[key]=idx;matched++;}
+    }
+    if(matched>=3){headerIdx=r;colMap=tryMap;break;}
+  }
+  if(headerIdx<0){alert('Could not detect column headers.');return;}
+
+  // Parse IMEI rows
+  imeiData=[];let lastBox='';
+  for(let r=headerIdx+1;r<rows.length;r++){
+    const row=rows[r];
+    const imei=colMap.imei>=0?String(row[colMap.imei]||'').trim():'';
+    if(!imei||imei==='undefined'||imei==='null'||imei==='NaN')continue;
+    const boxRaw=colMap.box>=0?String(row[colMap.box]||'').trim():'';
+    if(boxRaw&&boxRaw!=='undefined'&&boxRaw!=='null'&&boxRaw!=='NaN')lastBox=boxRaw.replace(/\.0$/,'');
+    imeiData.push({
+      sno:imeiData.length+1,box:lastBox,
+      imei:imei.replace(/\.0$/,''),
+      model:colMap.model>=0?String(row[colMap.model]||'').trim():'',
+      color:colMap.color>=0?String(row[colMap.color]||'').trim():'',
+      party:colMap.party>=0?String(row[colMap.party]||'').trim():'',
+      bill:colMap.bill>=0?String(row[colMap.bill]||'').trim():'',
+    });
+  }
+  if(!imeiData.length){alert('No valid data found in file.');return;}
+
+  // Build box summary → fill the Packing List itable (one row per box, no grouping)
+  const boxes=getImeiByBox();
+  const boxRows=boxes.map(bx=>{
+    const models={};
+    bx.items.forEach(it=>{const m=it.model||'(items)';models[m]=(models[m]||0)+1;});
+    const desc=Object.keys(models).sort((a,b)=>models[b]-models[a])[0];
+    return{boxLabel:String(bx.box),numBoxes:1,desc,pcsPerBox:bx.items.length,totalPcs:bx.items.length};
+  });
+
+  // Clear and fill packing list table
+  document.getElementById('plbody').innerHTML='';
+  boxRows.forEach(r=>addPackRow(false,r));
+
+  // Show IMEI card
+  renderImeiTable();
+
+  // Show file badge
+  const badge=document.getElementById('pack-file-badge');
+  badge.style.display='inline';
+  badge.textContent='✅ '+fileName+' — '+imeiData.length+' serials loaded';
+}
+
+function getImeiByBox(){
+  if(!imeiData.length)return[];
+  const boxes={};let lastBox='1';
+  imeiData.forEach(d=>{
+    const bx=d.box||lastBox;lastBox=bx;
+    if(!boxes[bx])boxes[bx]={box:bx,items:[]};
+    boxes[bx].items.push(d);
+  });
+  return Object.values(boxes);
+}
+
+function renderImeiTable(){
+  if(!imeiData.length){document.getElementById('imei-card').style.display='none';return;}
+  document.getElementById('imei-card').style.display='block';
+  const uBoxes=[...new Set(imeiData.map(d=>d.box))].filter(Boolean);
+  const uModels=[...new Set(imeiData.map(d=>d.model))].filter(Boolean);
+  document.getElementById('imei-stats').innerHTML=
+    '<strong>'+imeiData.length+'</strong>&nbsp;units &nbsp;·&nbsp; <strong>'+uBoxes.length+'</strong>&nbsp;boxes &nbsp;·&nbsp; <strong>'+uModels.length+'</strong>&nbsp;model(s)';
+  let lastBox='';
+  document.getElementById('imei-tbody').innerHTML=imeiData.map((d,i)=>{
+    const isStart=d.box&&d.box!==lastBox;lastBox=d.box||lastBox;
+    return'<tr'+(isStart?' style="border-top:2px solid var(--accent);"':'')+'>'+
+      '<td style="color:var(--ink3);font-size:11px;">'+d.sno+'</td>'+
+      '<td style="font-weight:'+(isStart?'700':'400')+';color:'+(isStart?'var(--accent)':'var(--ink4)')+';font-size:11px;">'+(isStart?'BOX '+d.box:'↳')+'</td>'+
+      '<td style="font-family:monospace;font-size:11px;letter-spacing:0.4px;">'+escH(d.imei)+'</td>'+
+      '<td style="font-size:12px;">'+escH(d.model)+'</td>'+
+      '<td style="font-size:12px;">'+escH(d.color)+'</td>'+
+      '<td style="font-size:12px;">'+escH(d.party)+'</td>'+
+      '<td style="font-size:12px;">'+escH(d.bill)+'</td></tr>';
+  }).join('');
+}
+
+function clearImeiData(){
+  if(!confirm('Remove all IMEI/Serial data?'))return;
+  imeiData=[];
+  document.getElementById('imei-card').style.display='none';
+  document.getElementById('pack-file-badge').style.display='none';
+  document.getElementById('pack-file-input').value='';
+}
+
+</script>
+
+<!-- Print tips overlay -->
+<div id="print-tips-overlay" class="no-print" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,0.25);">
+    <div style="font-size:16px;font-weight:700;margin-bottom:14px;">🖨 Before you print</div>
+    <div style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:16px;">
+      To remove the browser's date/time and URL from the printout:
+      <ol style="margin:10px 0 0 18px;padding:0;font-size:13px;">
+        <li>In the print dialog, click <strong>"More settings"</strong></li>
+        <li>Uncheck <strong>"Headers and footers"</strong></li>
+        <li>Click <strong>Print</strong></li>
+      </ol>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="document.getElementById('print-tips-overlay').style.display='none'" style="padding:8px 16px;border:1px solid #ddd;border-radius:7px;background:#fff;cursor:pointer;font-size:13px;">Cancel</button>
+      <button onclick="doPrint()" style="padding:8px 20px;border:none;border-radius:7px;background:#1a4d8f;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Print Now</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+
