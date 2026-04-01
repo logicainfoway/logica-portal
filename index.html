@@ -3852,6 +3852,8 @@ function doPrint(){
     '<title>Logica Infoway \u2014 Document</title>' +
     '<style>' + css + '</style>' +
     '<style>' +
+      /* Override portal-wide print rule that hides body > * */
+      'body.print-window > *{display:block!important;}' +
       'html,body{margin:0;padding:0;background:#fff;width:210mm;}' +
       '.doc-body{' +
         'padding:12mm 13mm 12mm 16mm;' +
@@ -3869,6 +3871,7 @@ function doPrint(){
       '.d-sig{min-height:50px;}' +
       '@page{margin:0;size:A4 portrait;}' +
       '@media print{' +
+        'body.print-window > *{display:block!important;}' +
         'html,body{background:#fff;width:210mm;height:297mm;}' +
         '.doc-body{' +
           'transform-origin:top left;' +
@@ -3877,7 +3880,7 @@ function doPrint(){
         'print-color-adjust:exact;' +
       '}' +
     '</style>' +
-    '</head><body>' +
+    '</head><body class="print-window">' +
     '<div class="doc-body" id="pw-doc-body">' + docHTML + '</div>' +
     '<script>' +
       'window.onload=function(){' +
