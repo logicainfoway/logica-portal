@@ -86,6 +86,14 @@ body{font-family:var(--sans);background:var(--s2);color:var(--ink);min-height:10
 }
 .tab-item:hover{color:var(--ink);background:var(--s2);}
 .tab-item.active{color:var(--accent);border-bottom-color:var(--accent);}
+/* Description autocomplete */
+.desc-wrap{position:relative;width:100%;}
+.desc-wrap input{width:100%;}
+.desc-dd{position:absolute;top:100%;left:0;right:0;z-index:1000;background:#fff;border:1px solid var(--border2);border-radius:0 0 6px 6px;box-shadow:var(--sh-lg);max-height:200px;overflow-y:auto;display:none;}
+.desc-dd.show{display:block;}
+.desc-dd-item{padding:7px 11px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--ink);}
+.desc-dd-item:hover{background:var(--accent-l);color:var(--accent);}
+.desc-dd-item:last-child{border-bottom:none;}
 .tab-icon{font-size:14px;}
 
 /* Content */
@@ -301,18 +309,164 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 .divider-label{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:0.6px;}
 .divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
+
+
+
+
+
+
 @media print{
-  /* Printing happens in a dedicated clean window — this is a safety fallback */
-  .sidebar,.topbar,.tab-bar,.btn-row,.no-print,
-  .doc-grid,.pg-head,.pill-row,.metric-grid,
-  .prev-tb{display:none!important;}
-  .doc-frame{box-shadow:none;border:none;}
-  body{background:#fff;}
-  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  /* Hide the entire portal */
+  body > *{ display:none!important; }
+  /* When sinv-printing class is on body, show only sinv-doc-body */
+  body.sinv-printing #sinv-doc-body{
+    display:block!important;
+    visibility:visible!important;
+    position:fixed!important;
+    top:0!important; left:0!important;
+    width:100vw!important;
+    height:100vh!important;
+    margin:0!important;
+    padding:9mm 12mm 9mm 15mm!important;
+    font-size:9px!important;
+    color:#111!important;
+    background:#fff!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+  body.sinv-printing #sinv-doc-body *{ visibility:visible!important; }
+  body.sinv-printing #sinv-doc-body table{ font-size:8.5px!important; }
+  body.sinv-printing #sinv-doc-body .dtitle{ font-size:13px!important; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  @page{ size:A4 portrait; margin:0; }
 }
-@page{
-  margin:1.5cm 1cm 2cm 1.3cm;
+
+/* ═══════════════════════════════════════════════════════════
+   SPLASH + AUTH
+═══════════════════════════════════════════════════════════ */
+#splash-screen {
+  position:fixed;inset:0;z-index:99999;
+  background:linear-gradient(135deg,#0f2d54 0%,#1a4d8f 50%,#0f2d54 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .6s ease;
 }
+#splash-screen.fade-out{opacity:0;pointer-events:none;}
+
+.splash-globe-wrap{position:relative;width:120px;height:120px;margin-bottom:32px;}
+.splash-globe{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 38% 38%, #2563b0, #0f2d54 70%);
+  border:2px solid rgba(255,255,255,0.2);
+  box-shadow:0 0 40px rgba(37,99,176,0.6), inset 0 0 30px rgba(0,0,0,0.3);
+  position:relative;overflow:hidden;
+}
+.globe-line{
+  position:absolute;width:100%;height:1px;background:rgba(255,255,255,0.15);
+  transform-origin:center;
+}
+.globe-line:nth-child(1){top:30%;}
+.globe-line:nth-child(2){top:50%;}
+.globe-line:nth-child(3){top:70%;}
+.globe-arc{
+  position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.15);
+  transform:scaleX(0.4);
+}
+.globe-arc:nth-child(4){transform:scaleX(0.4);}
+.globe-arc:nth-child(5){transform:scaleX(0.7);}
+
+/* plane orbit */
+.plane-orbit{
+  position:absolute;inset:-18px;
+  animation:orbit 2.4s linear infinite;
+}
+@keyframes orbit{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.plane-icon{
+  position:absolute;top:0;left:50%;transform:translateX(-50%) translateY(-2px);
+  font-size:22px;filter:drop-shadow(0 0 6px rgba(255,255,255,0.8));
+}
+/* orbit tilt */
+.plane-orbit-wrap{
+  position:absolute;inset:0;
+  transform:rotate(-20deg);
+}
+.orbit-ring{
+  position:absolute;inset:-18px;
+  border:1.5px dashed rgba(255,255,255,0.18);
+  border-radius:50%;
+}
+
+.splash-logo-name{
+  font-size:28px;font-weight:900;font-style:italic;
+  color:#fff;letter-spacing:0.5px;
+  font-family:'Britannic Bold','Arial Black',Arial,sans-serif;
+  margin-bottom:6px;
+}
+.splash-tagline{font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;}
+.splash-loading{
+  margin-top:28px;display:flex;gap:6px;
+}
+.splash-dot{
+  width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.3);
+  animation:dotpulse 1.2s infinite ease-in-out;
+}
+.splash-dot:nth-child(2){animation-delay:.2s;}
+.splash-dot:nth-child(3){animation-delay:.4s;}
+@keyframes dotpulse{0%,80%,100%{transform:scale(1);background:rgba(255,255,255,0.3);}40%{transform:scale(1.4);background:#60a5fa;}}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{
+  position:fixed;inset:0;z-index:99998;
+  background:linear-gradient(135deg,#0f2d54 0%,#1a4d8f 100%);
+  display:none;align-items:center;justify-content:center;
+  font-family:var(--sans);
+}
+#auth-screen.show{display:flex;}
+.auth-card{
+  background:#fff;border-radius:16px;padding:36px 40px;
+  width:100%;max-width:420px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.3);
+}
+.auth-logo{text-align:center;margin-bottom:24px;}
+.auth-logo-name{font-size:22px;font-weight:900;font-style:italic;color:#0f2d54;font-family:'Britannic Bold','Arial Black',Arial,sans-serif;}
+.auth-logo-sub{font-size:10px;color:#9ca3af;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+.auth-tabs{display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:24px;}
+.auth-tab{
+  flex:1;padding:10px;text-align:center;cursor:pointer;
+  font-size:13.5px;font-weight:600;color:#9ca3af;
+  border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;
+}
+.auth-tab.active{color:#1a4d8f;border-bottom-color:#1a4d8f;}
+.auth-view{display:none;}
+.auth-view.active{display:block;}
+.auth-field{margin-bottom:16px;}
+.auth-field label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px;}
+.auth-field input{
+  width:100%;padding:10px 13px;border:1.5px solid #d1d5db;
+  border-radius:8px;font-size:14px;outline:none;transition:border .15s;
+  box-sizing:border-box;
+}
+.auth-field input:focus{border-color:#2563b0;}
+.auth-btn{
+  width:100%;padding:11px;background:#1a4d8f;color:#fff;
+  border:none;border-radius:8px;font-size:14px;font-weight:700;
+  cursor:pointer;transition:background .15s;margin-top:4px;
+}
+.auth-btn:hover{background:#2563b0;}
+.auth-btn.secondary{background:#f3f4f6;color:#374151;margin-top:8px;}
+.auth-btn.secondary:hover{background:#e5e7eb;}
+.auth-err{
+  background:#fee2e2;color:#991b1b;border-radius:7px;
+  padding:9px 13px;font-size:13px;margin-bottom:14px;display:none;
+}
+.auth-err.show{display:block;}
+.auth-ok{
+  background:#dcfce7;color:#166534;border-radius:7px;
+  padding:9px 13px;font-size:13px;margin-bottom:14px;display:none;
+}
+.auth-ok.show{display:block;}
+.auth-links{text-align:center;margin-top:14px;}
+.auth-link{font-size:12.5px;color:#2563b0;cursor:pointer;text-decoration:underline;margin:0 8px;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -344,6 +498,93 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
   </div>
 </div>
 
+
+<!-- ═══════════════ SPLASH SCREEN ═══════════════ -->
+<div id="splash-screen">
+  <div class="splash-globe-wrap">
+    <div class="splash-globe">
+      <div class="globe-line"></div>
+      <div class="globe-line"></div>
+      <div class="globe-line"></div>
+      <div class="globe-arc"></div>
+      <div class="globe-arc"></div>
+    </div>
+    <div class="plane-orbit-wrap">
+      <div class="orbit-ring"></div>
+      <div class="plane-orbit">
+        <div class="plane-icon">✈</div>
+      </div>
+    </div>
+  </div>
+  <div class="splash-logo-name">LOGICA INFOWAY LIMITED</div>
+  <div class="splash-tagline">Export Operations Portal</div>
+  <div class="splash-loading">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-name">LOGICA INFOWAY LIMITED</div>
+      <div class="auth-logo-sub">Export Operations Portal</div>
+    </div>
+
+    <!-- Sign In / Sign Up tabs -->
+    <div class="auth-tabs" id="auth-tabs">
+      <div class="auth-tab active" onclick="authShowTab('signin')">Sign In</div>
+      <div class="auth-tab" onclick="authShowTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- SIGN IN -->
+    <div class="auth-view active" id="auth-signin">
+      <div class="auth-err" id="signin-err"></div>
+      <div class="auth-field"><label>Email Address</label><input type="email" id="signin-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signin-pass" placeholder="Your password" onkeydown="if(event.key==='Enter')authSignIn()"></div>
+      <button class="auth-btn" onclick="authSignIn()">Sign In</button>
+      <div class="auth-links">
+        <span class="auth-link" onclick="authShowTab('forgot-pass')">Forgot Password?</span>
+        <span class="auth-link" onclick="authShowTab('forgot-user')">Forgot Username?</span>
+      </div>
+    </div>
+
+    <!-- SIGN UP -->
+    <div class="auth-view" id="auth-signup">
+      <div class="auth-err" id="signup-err"></div>
+      <div class="auth-ok"  id="signup-ok"></div>
+      <div class="auth-field"><label>Full Name</label><input type="text" id="signup-name" placeholder="Your full name"></div>
+      <div class="auth-field"><label>Email Address (Username)</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Create Password</label><input type="password" id="signup-pass" placeholder="Min 6 characters"></div>
+      <div class="auth-field"><label>Confirm Password</label><input type="password" id="signup-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')authSignUp()"></div>
+      <button class="auth-btn" onclick="authSignUp()">Create Account</button>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div class="auth-view" id="auth-forgot-pass">
+      <div class="auth-err" id="fp-err"></div>
+      <div class="auth-ok"  id="fp-ok"></div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">Enter your email address to reset your password.</p>
+      <div class="auth-field"><label>Email Address</label><input type="email" id="fp-email" placeholder="you@example.com"></div>
+      <div class="auth-field" id="fp-newpass-wrap" style="display:none;"><label>New Password</label><input type="password" id="fp-newpass" placeholder="New password"></div>
+      <button class="auth-btn" id="fp-btn" onclick="authForgotPass()">Verify & Reset</button>
+      <button class="auth-btn secondary" onclick="authShowTab('signin')">← Back to Sign In</button>
+    </div>
+
+    <!-- FORGOT USERNAME -->
+    <div class="auth-view" id="auth-forgot-user">
+      <div class="auth-err" id="fu-err"></div>
+      <div class="auth-ok"  id="fu-ok"></div>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">Enter your email address and we'll show you your username.</p>
+      <div class="auth-field"><label>Email Address</label><input type="email" id="fu-email" placeholder="you@example.com"></div>
+      <button class="auth-btn" onclick="authForgotUser()">Find My Username</button>
+      <button class="auth-btn secondary" onclick="authShowTab('signin')">← Back to Sign In</button>
+    </div>
+  </div>
+</div>
+
 <div class="shell">
 <!-- ════════ SIDEBAR ════════ -->
 <aside class="sidebar">
@@ -364,6 +605,9 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="ni" id="nav-settings" onclick="switchTab('settings')"><span class="ni-icon">⚙️</span>Company Settings</div>
   </nav>
   <div class="sb-footer">
+  <div onclick="authLogout()" style="cursor:pointer;font-size:11px;color:rgba(255,255,255,0.4);padding:4px 0;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+    <span>⎋</span><span>Sign Out</span>
+  </div>
     <div class="sb-footer-text">Logica Infoway Ltd.<br>Export Operations Portal v2</div>
   </div>
 </aside>
@@ -468,7 +712,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="card">
       <div class="card-head"><div class="sec-ic">📦</div><h3>Line Items</h3></div>
       <div class="card-body">
-        <div class="iw"><table class="itable"><thead><tr>
+        <div class="iw" style="overflow:visible;"><table class="itable"><thead><tr>
           <th style="min-width:290px">Description of Goods</th>
           <th style="min-width:95px">HSN Code</th>
           <th style="min-width:85px">Qty (Pcs)</th>
@@ -489,7 +733,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="card">
       <div class="card-head"><div class="sec-ic">📋</div><h3>Packing List</h3><span class="sub">Box-wise breakdown for packing list document</span></div>
       <div class="card-body">
-        <div class="iw"><table class="itable"><thead><tr>
+        <div class="iw" style="overflow:visible;"><table class="itable"><thead><tr>
           <th style="min-width:90px">Box No.</th>
           <th style="min-width:280px">Description</th>
           <th style="min-width:110px">Pcs Each Box</th>
@@ -1000,7 +1244,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
           </div>
           <div class="field"><label>PO Number</label><input type="text" id="sinv-pono" placeholder="e.g. EL/25-26/048"></div>
           <div class="field"><label>PO Date</label><input type="date" id="sinv-podate"></div>
-          <div class="field"><label>Tax / IGST Rate %</label><input type="number" id="sinv-tax" value="0" min="0" max="100" step="0.5" oninput="sinvRecalc()"></div>
+
         </div>
       </div>
     </div>
@@ -1054,10 +1298,11 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="card">
       <div class="card-head"><div class="sec-ic">📝</div><h3>Line Items</h3></div>
       <div class="card-body" style="padding-bottom:0;">
-        <div class="iw">
+        <div class="iw" style="overflow:visible;">
           <table class="itable">
             <thead><tr>
               <th style="min-width:280px;">Description</th>
+              <th style="min-width:100px;">HSN Code</th>
               <th style="min-width:80px;text-align:right;">Qty</th>
               <th style="min-width:110px;text-align:right;">Unit Price</th>
               <th style="min-width:110px;text-align:right;">Amount</th>
@@ -1069,7 +1314,6 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
         <div style="display:flex;justify-content:flex-end;margin-top:14px;margin-bottom:14px;">
           <div style="min-width:280px;">
             <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:var(--ink2);">Subtotal</span><span id="sinv-subtotal" style="font-weight:600;">—</span></div>
-            <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px;"><span style="color:var(--ink2);">Tax (<span id="sinv-tax-label">18</span>%)</span><span id="sinv-tax-amt" style="font-weight:600;">—</span></div>
             <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:15px;font-weight:700;border-top:2px solid var(--border2);margin-top:4px;"><span>Total</span><span id="sinv-total">—</span></div>
           </div>
         </div>
@@ -1161,6 +1405,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /shell -->
+<datalist id="desc-list"></datalist>
 <script>
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS & STATE
@@ -1178,6 +1423,7 @@ const LS={
   set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{console.warn('LS full');}},
 };
 const KEY_BUYERS='logica_buyers';
+const KEY_CONSIGNEE='logica_consignee_memory';
 const KEY_SHIPMENTS='logica_shipments';
 const KEY_SETTINGS='logica_settings';
 const KEY_TRACKER='logica_tracker';
@@ -1200,15 +1446,38 @@ function sinvSwitchTab(t){
 function sinvAddItem(){
   const tbody = document.getElementById('sinv-items-body');
   if(!tbody) return;
-  const idx = tbody.rows.length;
   const tr = document.createElement('tr');
-  tr.innerHTML =
-    '<td><input type="text" placeholder="Description of goods" oninput="sinvRecalc()" style="width:100%;"></td>'+
+
+  // Description cell with autocomplete
+  const descTd = document.createElement('td');
+  const descWrap = descMakeInput('Description of goods', (inp, hsn) => {
+    const hsnInp = tr.querySelector('input[data-sinv-hsn]');
+    if(hsnInp && hsn) hsnInp.value = hsn;
+    inp._currentHsn = hsn||'';
+    sinvRecalc();
+  });
+  descWrap._input.addEventListener('input', sinvRecalc);
+  descTd.appendChild(descWrap);
+
+  const rest = document.createElement('template');
+  rest.innerHTML =
+    '<td><input type="text" data-sinv-hsn value="" placeholder="HSN Code" style="width:100%;"></td>'+
     '<td><input type="number" value="1" min="1" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
     '<td><input type="number" value="" min="0" placeholder="0.00" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
     '<td><input type="number" value="" readonly style="width:100%;text-align:right;background:var(--s2);"></td>'+
     '<td><button class="ic-btn" onclick="this.closest(\'tr\').remove();sinvRecalc();">✕</button></td>';
+  tr.appendChild(descTd);
+  rest.content.childNodes.forEach(n => tr.appendChild(n.cloneNode(true)));
+
   tbody.appendChild(tr);
+  const hsnInp = tr.querySelector('input[data-sinv-hsn]');
+  if(hsnInp){
+    hsnInp.addEventListener('blur', ()=>{
+      const desc = descWrap._input.value.trim();
+      const hsn  = hsnInp.value.trim();
+      if(desc && hsn) descSave(desc, hsn);
+    });
+  }
   sinvRecalc();
 }
 
@@ -1217,162 +1486,204 @@ function sinvRecalc(){
   if(!tbody) return;
   const cur = document.getElementById('sinv-currency')?.value || 'INR';
   const sym = {INR:'₹',USD:'$',AED:'AED ',EUR:'€',GBP:'£'}[cur] || cur+' ';
-  const taxRate = parseFloat(document.getElementById('sinv-tax')?.value) || 0;
   let subtotal = 0;
   tbody.querySelectorAll('tr').forEach(tr=>{
     const ins = tr.querySelectorAll('input');
-    const qty = parseFloat(ins[1]?.value) || 0;
-    const price = parseFloat(ins[2]?.value) || 0;
+    const qty = parseFloat(ins[2]?.value) || 0;
+    const price = parseFloat(ins[3]?.value) || 0;
     const amt = qty * price;
-    if(ins[3]) ins[3].value = amt > 0 ? amt.toFixed(2) : '';
+    if(ins[4]) ins[4].value = amt > 0 ? amt.toFixed(2) : '';
     subtotal += amt;
   });
-  const taxAmt = subtotal * taxRate / 100;
-  const total = subtotal + taxAmt;
   const fmt = v => sym + fN(Math.round(v * 100) / 100);
   const el = id => document.getElementById(id);
   if(el('sinv-subtotal')) el('sinv-subtotal').textContent = subtotal > 0 ? fmt(subtotal) : '—';
-  if(el('sinv-tax-amt'))  el('sinv-tax-amt').textContent  = taxAmt  > 0 ? fmt(taxAmt)  : '—';
-  if(el('sinv-total'))    el('sinv-total').textContent    = total   > 0 ? fmt(total)   : '—';
-  if(el('sinv-tax-label')) el('sinv-tax-label').textContent = taxRate;
+  if(el('sinv-total'))    el('sinv-total').textContent    = subtotal > 0 ? fmt(subtotal) : '—';
 }
 
 function sinvGenerateInvoice(){
   const custName = document.getElementById('sinv-cust-name')?.value.trim();
   if(!custName){ alert('Please enter a customer name.'); return; }
 
-  // Collect line items
   const items = [];
-  document.querySelectorAll('#sinv-items-body tr').forEach((tr,n)=>{
+  let missingHsnAt = 0;
+  document.querySelectorAll('#sinv-items-body tr').forEach(tr=>{
     const ins = tr.querySelectorAll('input');
     const desc  = ins[0]?.value.trim();
-    const qty   = parseFloat(ins[1]?.value)||0;
-    const price = parseFloat(ins[2]?.value)||0;
-    if(desc) items.push({desc, hsn:'', qty, price, amtUSD: qty*price});
+    const hsn   = ins[1]?.value.trim();
+    const qty   = parseFloat(ins[2]?.value)||0;
+    const price = parseFloat(ins[3]?.value)||0;
+    if(desc && !hsn && !missingHsnAt){
+      missingHsnAt = items.length + 1;
+    }
+    if(desc) items.push({desc, hsn, qty, price, amt: qty*price});
   });
+  if(missingHsnAt){ alert('Please enter HSN Code for line item '+missingHsnAt+'.'); return; }
   if(!items.length){ alert('Please add at least one line item.'); return; }
 
   const cur      = document.getElementById('sinv-currency')?.value || 'USD';
-  const taxRate  = parseFloat(document.getElementById('sinv-tax')?.value)||0;
-  const totalUSD = items.reduce((s,i)=>s+i.amtUSD, 0);
-  const igstAmt  = totalUSD * taxRate / 100;
-  const invINR   = totalUSD + igstAmt;
+  const sym      = {INR:'₹',USD:'US$ ',AED:'AED ',EUR:'€ ',GBP:'£ '}[cur]||cur+' ';
+  const total    = items.reduce((s,i)=>s+i.amt, 0);
   const totalPcs = items.reduce((s,i)=>s+i.qty, 0);
+  const fmt      = v => sym+fN((Math.round(v*100)/100).toFixed(2));
 
-  // Invoice number: base from sinv-invno, suffix from buyer suffix field or 'A','B'...
-  const baseInvNo = document.getElementById('sinv-invno')?.value.trim() || '—';
-  const invDate   = document.getElementById('sinv-date')?.value || '';
-  const poNo      = document.getElementById('sinv-pono')?.value.trim() || '';
-  const poDate    = document.getElementById('sinv-podate')?.value || '';
-  const dueDate   = document.getElementById('sinv-due')?.value || '';
-  const terms     = document.getElementById('sinv-terms')?.value || '';
-  const notes     = document.getElementById('sinv-notes')?.value.trim() || '';
-  const mode      = document.getElementById('sinv-mode')?.value || '';
-  const pol       = document.getElementById('sinv-pol')?.value || '';
-  const pod       = document.getElementById('sinv-pod')?.value || '';
-  const dest      = document.getElementById('sinv-dest')?.value || '';
-  const dterm     = document.getElementById('sinv-dterm')?.value || 'CIF, Dubai';
-  const pcar      = document.getElementById('sinv-pcar')?.value || '';
+  // Persist description ↔ HSN mappings for future dropdowns
+  items.forEach(it => {
+    if(it.desc && it.hsn) descSave(it.desc, it.hsn);
+  });
 
-  // Buyer details
-  const custAddr  = document.getElementById('sinv-cust-addr')?.value.trim() || '';
-  const custAddr2 = document.getElementById('sinv-cust-addr2')?.value.trim() || '';
-  const custTrn   = document.getElementById('sinv-cust-gst')?.value.trim() || '';
-  const custPhone = document.getElementById('sinv-cust-phone')?.value.trim() || '';
+  const invNo    = document.getElementById('sinv-invno')?.value.trim() || '—';
+  const invDate  = document.getElementById('sinv-date')?.value || '';
+  const poNo     = document.getElementById('sinv-pono')?.value.trim() || '';
+  const poDate   = document.getElementById('sinv-podate')?.value || '';
+  const terms    = document.getElementById('sinv-terms')?.value || '';
+  const notes    = document.getElementById('sinv-notes')?.value.trim() || '';
+  const mode     = document.getElementById('sinv-mode')?.value || '';
+  const pol      = document.getElementById('sinv-pol')?.value || '';
+  const pod      = document.getElementById('sinv-pod')?.value || '';
+  const dest     = document.getElementById('sinv-dest')?.value || '';
+  const dterm    = document.getElementById('sinv-dterm')?.value || '';
+  const pcar     = document.getElementById('sinv-pcar')?.value || '';
 
-  // Consignee (from company settings or separate field)
-  const cnName    = document.getElementById('sinv-cn-name')?.value.trim() || '';
-  const cnAddr    = document.getElementById('sinv-cn-addr')?.value.trim() || '';
-  const cnAddr2   = document.getElementById('sinv-cn-addr2')?.value.trim() || '';
-  const cnTrn     = document.getElementById('sinv-cn-trn')?.value.trim() || '';
-  const cnPhone   = document.getElementById('sinv-cn-phone')?.value.trim() || '';
+  const cnName   = document.getElementById('sinv-cn-name')?.value.trim() || '';
+  const cnAddr   = document.getElementById('sinv-cn-addr')?.value.trim() || '';
+  const cnAddr2  = document.getElementById('sinv-cn-addr2')?.value.trim() || '';
+  const cnTrn    = document.getElementById('sinv-cn-trn')?.value.trim() || '';
+  const cnPhone  = document.getElementById('sinv-cn-phone')?.value.trim() || '';
+  const custAddr = document.getElementById('sinv-cust-addr')?.value.trim() || '';
+  const custAddr2= document.getElementById('sinv-cust-addr2')?.value.trim() || '';
+  const custTrn  = document.getElementById('sinv-cust-gst')?.value.trim() || '';
+  const custPhone= document.getElementById('sinv-cust-phone')?.value.trim() || '';
 
-  // Company settings
-  const ex = getEx();
+  // Logica address from settings
+  const ex    = getEx();
+  const exA1  = ex.a1 || '';
+  const exA2  = ex.a2 || '';
 
-  // Build a pseudo SD object compatible with CI helpers
-  const d = {
-    invNo: baseInvNo,
-    piNo:  baseInvNo.replace(/^EX\//,'PI/'),
-    idate: invDate,
-    pdate: poDate,
-    ino:   baseInvNo,
-    pno:   poNo,
-    xrate: parseFloat(document.getElementById('xrate')?.value)||1,
-    igstPct: taxRate,
-    igstAmt,
-    totalUSD,
-    totalINR: totalUSD,
-    invINR,
-    totalPcs,
-    items: items.map(i=>({...i, amtINR: i.amtUSD})),
-    ex,
-    // Buyer object matching csgBuyer format
-    b: { n: custName, a1: custAddr, a2: custAddr2, trn: custTrn, con: custPhone,
-         cy: '', pay: terms, sfx: '' },
-    // Consignee fields
-    cn: cnName || custName,
-    ca1: cnAddr || custAddr,
-    ca2: cnAddr2 || custAddr2,
-    ctrn: cnTrn || custTrn,
-    cc: cnPhone || custPhone,
-    ccy: '',
-    // Route fields
-    mode, pol, pod, dest,
-    dterm, pcar,
-    pterm: terms,
-    rmk: notes,
-    gweight: '',
-  };
-
-  // Item rows — same format as CI
   const itemRows = items.map((it,n)=>
-    `<tr><td class="nc" style="font-weight:600;">${n+1}</td>`+
+    `<tr>`+
+    `<td class="nc" style="font-weight:600;">${n+1}</td>`+
     `<td>${escH(it.desc)}</td>`+
-    `<td class="nc"></td>`+
+    `<td class="nc">${escH(it.hsn||'')}</td>`+
     `<td class="nc">${fN(it.qty)} Pcs</td>`+
-    `<td class="nr">${it.price.toFixed(2)}</td>`+
-    `<td class="nr">${fN(it.amtUSD)}</td>`+
+    `<td class="nr">${sym}${it.price.toFixed(2)}</td>`+
+    `<td class="nr">${sym}${fN((Math.round(it.amt*100)/100).toFixed(2))}</td>`+
     `</tr>`
   ).join('');
 
-  const sym = {INR:'₹',USD:'',AED:'AED ',EUR:'€',GBP:'£'}[cur]||'';
-  const fmtAmt = v => sym+fN(Math.round(v*100)/100);
-
   const doc =
-    lhHead()+
-    '<div class="dtitle">Sales Invoice</div>'+
-    topGrid(d, false)+
-    csgBuyer(d)+
-    routeT(d)+
+    sinvLhHead()+
+    `<div class="dtitle">Sales Invoice</div>`+
+
+    // Top grid: Exporter (name + address) | Invoice No & Date
+    `<table class="dt" style="margin-bottom:0"><tr>`+
+      `<td rowspan="2" style="width:46%;vertical-align:top;padding:7px 9px;">`+
+        `<span class="dc-lbl">Exporter</span>`+
+        `<div class="dc-vlg">LOGICA INFOWAY LIMITED</div>`+
+        (exA1?`<div style="font-size:10px;">${escH(exA1)}</div>`:'')+
+        (exA2?`<div style="font-size:10px;">${escH(exA2)}</div>`:'')+
+      `</td>`+
+      `<td style="padding:5px 9px;vertical-align:top;">`+
+        `<span class="dc-lbl">Invoice No. &amp; Date</span>`+
+        `<div style="font-weight:bold;">${escH(invNo)}</div>`+
+        `<div style="font-size:10px;">Date: ${fmtD(invDate)}</div>`+
+      `</td>`+
+    `</tr><tr>`+
+      `<td style="padding:5px 9px;vertical-align:top;">`+
+        `<span class="dc-lbl">PO No. &amp; Date</span>`+
+        (poNo?`<div style="font-weight:bold;">${escH(poNo)}</div>`:'')+
+        (poDate?`<div style="font-size:10px;">Date: ${fmtD(poDate)}</div>`:'<div>&nbsp;</div>')+
+      `</td>`+
+    `</tr></table>`+
+
+    // Consignee / Buyer
+    `<table class="dt" style="margin-bottom:0"><tr>`+
+      `<td style="width:50%;vertical-align:top;padding:7px 9px;">`+
+        `<span class="dc-lbl">Consignee</span>`+
+        (cnName?`<div style="font-weight:bold;font-size:11px;">${escH(cnName)}</div>`:'<div>&nbsp;</div>')+
+        (cnAddr ?`<div style="font-size:10px;">${escH(cnAddr)}</div>`:'')+
+        (cnAddr2?`<div style="font-size:10px;">${escH(cnAddr2)}</div>`:'')+
+        (cnTrn  ?`<div style="font-size:10px;">TRN: ${escH(cnTrn)}</div>`:'')+
+        (cnPhone?`<div style="font-size:10px;">CON.NO. ${escH(cnPhone)}</div>`:'')+
+      `</td>`+
+      `<td style="vertical-align:top;padding:7px 9px;">`+
+        `<span class="dc-lbl">Buyer (if other than consignee)</span>`+
+        `<div style="font-weight:bold;font-size:11px;">${escH(custName)}</div>`+
+        (custAddr ?`<div style="font-size:10px;">${escH(custAddr)}</div>`:'')+
+        (custAddr2?`<div style="font-size:10px;">${escH(custAddr2)}</div>`:'')+
+        (custTrn  ?`<div style="font-size:10px;">TRN: ${escH(custTrn)}</div>`:'')+
+        (custPhone?`<div style="font-size:10px;">CON.NO. ${escH(custPhone)}</div>`:'')+
+      `</td>`+
+    `</tr></table>`+
+
+    // Route
+    `<table class="dt" style="margin-bottom:0">`+
+      `<tr>`+
+        `<td style="padding:4px 7px;"><span class="dc-lbl">Per-Carriage By</span> ${escH(pcar)}</td>`+
+        `<td colspan="3" style="padding:4px 7px;"><span class="dc-lbl">Place of Receipt by Per-Carrier</span> ${escH(pol)}</td>`+
+      `</tr><tr>`+
+        `<td style="padding:4px 7px;"><span class="dc-lbl">Mode of Shipment</span> ${escH(mode)}</td>`+
+        `<td style="padding:4px 7px;"><span class="dc-lbl">Port of Loading</span> ${escH(pol)}</td>`+
+        `<td style="padding:4px 7px;"><span class="dc-lbl">Port of Discharge</span> ${escH(pod)}</td>`+
+        `<td style="padding:4px 7px;"><span class="dc-lbl">Final Destination</span> ${escH(dest)}</td>`+
+      `</tr><tr>`+
+        `<td style="padding:4px 7px;" colspan="2"><span class="dc-lbl">Country of Origin</span> INDIA</td>`+
+        `<td style="padding:4px 7px;"><span class="dc-lbl">Delivery Term</span> ${escH(dterm)}</td>`+
+        `<td style="padding:4px 7px;"><span class="dc-lbl">Payment Terms</span> ${escH(terms)}</td>`+
+      `</tr>`+
+    `</table>`+
+
+    // Items
     `<table class="dt"><thead><tr>`+
-      `<th style="width:60px">Marks&amp;Nos</th>`+
+      `<th style="width:50px">Marks&amp;Nos</th>`+
       `<th>Description of Goods</th>`+
-      `<th>HSN</th>`+
-      `<th>Qty</th>`+
-      `<th>Rate CIF US$</th>`+
-      `<th>Amount CIF US$</th>`+
+      `<th style="width:95px">HSN</th>`+
+      `<th style="width:80px">Qty</th>`+
+      `<th style="width:90px">Rate (${cur})</th>`+
+      `<th style="width:100px">Amount (${cur})</th>`+
     `</tr></thead>`+
     `<tbody>${itemRows}`+
-    `<tr class="tot"><td colspan="3">Total</td>`+
-    `<td class="nc">${fN(totalPcs)} Pcs</td>`+
-    `<td></td>`+
-    `<td class="nr">${fN(totalUSD)}</td>`+
+    `<tr class="tot">`+
+      `<td colspan="3">Total</td>`+
+      `<td class="nc">${fN(totalPcs)} Pcs</td>`+
+      `<td></td>`+
+      `<td class="nr">${fmt(total)}</td>`+
     `</tr></tbody></table>`+
-    `<div style="display:grid;grid-template-columns:1fr auto;gap:14px;margin-top:8px;align-items:start;">`+
-      `<div>`+
-        `<div class="d-words"><strong>Amount in Words – (USD: ${n2w(Math.round(totalUSD))} ONLY)</strong></div>`+
-        (taxRate>0?`<div style="font-size:9.5px;margin-top:5px;">Tax @ ${taxRate}%: ${fmtAmt(igstAmt)}</div>`:'')
-      +`</div>`+
-      `<table style="font-size:10.5px;border-collapse:collapse;min-width:240px;">`+
-        `<tr><td style="padding:3px 9px;border:.5px solid #ccc;">Taxable Value</td><td style="padding:3px 9px;border:.5px solid #ccc;text-align:right;">${fmtAmt(totalUSD)}</td></tr>`+
-        (taxRate>0?`<tr><td style="padding:3px 9px;border:.5px solid #ccc;">Tax @ ${taxRate}%</td><td style="padding:3px 9px;border:.5px solid #ccc;text-align:right;">${fmtAmt(igstAmt)}</td></tr>`:'')
-       +`<tr style="font-weight:bold;background:#f0f0f0;"><td style="padding:3px 9px;border:.5px solid #ccc;">Invoice Value</td><td style="padding:3px 9px;border:.5px solid #ccc;text-align:right;">${fmtAmt(invINR)}</td></tr>`+
-      `</table>`+
+
+    // Amount in words
+    `<div class="d-words" style="margin-top:6px;">`+
+      `<strong>Amount in Words – (${cur}: ${n2w(Math.round(total))} ONLY)</strong>`+
     `</div>`+
-    declBlock(d)+
-    bkSig(d)+
-    lhFoot();
+    (notes?`<div style="font-size:9px;margin-top:5px;white-space:pre-line;">${escH(notes)}</div>`:'')+
+
+    // Terms, Bank Details, Signature
+    `<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:8px;line-height:1.6;">`+
+      `<div>`+
+        `<div style="font-weight:700;font-size:8.5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.3px;">Payment Terms</div>`+
+        `<div style="font-style:italic;color:#222;">Full payment shall be remitted to the Exporter/Consignee prior to the release of goods. Stock will be released exclusively upon receipt of complete payment by the Exporter/Consignee. No partial releases will be entertained.</div>`+
+        `<div style="margin-top:6px;font-weight:700;font-size:8.5px;text-transform:uppercase;letter-spacing:0.3px;">Declaration</div>`+
+        `<div>1. I/We undertake to abide by the provisions, including conditions, restrictions, exclusions and time-limits as provided under RoDTEP scheme, and relevant notifications, regulations, etc., as amended from time to time.</div>`+
+        `<div>2. Any claim made in this shipping bill or bill of export is not with respect to any duties or taxes or levies which are exempted or remitted or credited under any other mechanism outside RoDTEP.</div>`+
+        `<div>3. I/We undertake to preserve and make available relevant documents relating to the exported goods for the purposes of audit in the manner and for the time period prescribed in the Customs Audit Regulations, 2018.</div>`+
+      `</div>`+
+      `<div style="border-left:1px solid #ddd;padding-left:8px;">`+
+        `<div style="font-weight:700;font-size:8.5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.3px;">Bank Details</div>`+
+        `<div><strong>Bank Name:</strong> ICICI BANK</div>`+
+        `<div><strong>Address:</strong> SRI MUKHERJEE ROAD, BRANCH 38, HEMANTA BASU SARANI, KOLKATA - 700 001</div>`+
+        `<div><strong>AD Code:</strong> 6390008 / 1000009</div>`+
+        `<div><strong>Account No:</strong> 000651000589</div>`+
+        `<div><strong>IFSC Code:</strong> ICIC0000006</div>`+
+        `<div><strong>Swift Code:</strong> ICICINBBCTS</div>`+
+      `</div>`+
+    `</div>`+
+    `<div class="d-bs" style="margin-top:8px;">`+
+      `<div style="font-size:8px;color:#555;font-style:italic;">We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct. This is a computer-generated invoice, no signature required.</div>`+
+      `<div class="d-sig">`+
+        `<div style="font-size:10px;font-weight:bold;">LOGICA INFOWAY LIMITED</div>`+
+        `<div class="d-sig-lbl">Authorised Signatory &amp; Date</div>`+
+      `</div>`+
+    `</div>`+
+    sinvLhFoot();
 
   document.getElementById('sinv-doc-body').innerHTML = doc;
   document.getElementById('sinv-preview-wrap').style.display = 'block';
@@ -1383,29 +1694,66 @@ function sinvGenerateInvoice(){
 function sinvPrint(){
   const docBody = document.getElementById('sinv-doc-body');
   if(!docBody || !docBody.innerHTML.trim()){ alert('Generate an invoice first.'); return; }
-  const styleEl = document.querySelector('style');
-  const css = styleEl ? styleEl.textContent : '';
-  const pw = window.open('','_blank');
-  pw.document.open();
-  pw.document.write(
-    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sales Invoice</title>'+
-    '<style>'+css+'</style>'+
-    '<style>html,body{margin:0;padding:0;background:#fff;width:210mm;}'+
-    '.doc-body{padding:12mm 13mm 12mm 16mm;font-size:10.5px;color:#111;position:relative;box-sizing:border-box;width:210mm;}'+
-    'table{font-size:9.5px;}.dtitle{font-size:14px;margin:6px 0;}'+
-    '.d-bs{margin-top:8px;}.d-sig{min-height:50px;}'+
-    '@page{margin:0;size:A4 portrait;}'+
-    '@media print{html,body{background:#fff;}-webkit-print-color-adjust:exact;print-color-adjust:exact;}</style>'+
-    '</head><body><div class="doc-body" id="pw-doc">'+docBody.innerHTML+'</div>'+
-    '<script>window.onload=function(){'+
-      'var b=document.getElementById("pw-doc");'+
-      'var s=Math.min(Math.round(297*96/25.4)/b.scrollHeight,1);'+
-      'if(s<1){b.style.transform="scale("+s+")";b.style.transformOrigin="top left";b.style.width=(100/s)+"%";}'+
-      'setTimeout(function(){window.print();window.close();},400);'+
-    '};<\/script></body></html>'
-  );
-  pw.document.close();
+
+  // Inject a temporary print-only <style> that hides everything except sinv-doc-body
+  const styleId = 'sinv-print-style';
+  let st = document.getElementById(styleId);
+  if(st) st.remove();
+  st = document.createElement('style');
+  st.id = styleId;
+  st.textContent = [
+    '@media print{',
+    '  body > *:not(#sinv-print-mount){ display:none !important; visibility:hidden !important; }',
+    '  #sinv-print-mount{',
+    '    display:block !important;',
+    '    visibility:visible !important;',
+    '    position:fixed !important;',
+    '    top:0 !important; left:0 !important;',
+    '    width:100% !important;',
+    '    height:auto !important;',
+    '    z-index:999999 !important;',
+    '    background:#fff !important;',
+    '  }',
+    '  #sinv-print-mount *{ visibility:visible !important; }',
+    '  #sinv-print-mount .doc-body{',
+    '    width:100% !important;',
+    '    padding:9mm 11mm 9mm 14mm !important;',
+    '    font-size:9px !important;',
+    '    box-sizing:border-box !important;',
+    '  }',
+    '  #sinv-print-mount table{ font-size:8.5px !important; }',
+    '  @page{ size:A4 portrait; margin:0; }',
+    '  -webkit-print-color-adjust:exact;',
+    '  print-color-adjust:exact;',
+    '}'
+  ].join('\n');
+  document.head.appendChild(st);
+
+  // Mount a wrapper div with the invoice content directly in body
+  let mount = document.getElementById('sinv-print-mount');
+  if(mount) mount.remove();
+  mount = document.createElement('div');
+  mount.id = 'sinv-print-mount';
+  mount.innerHTML = '<div class="doc-body">' + docBody.innerHTML + '</div>';
+  document.body.appendChild(mount);
+
+  // Print then clean up
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){
+      mount.remove();
+      st.remove();
+    }, 1000);
+  }, 300);
 }
+
+
+
+
+
+
+
+
 
 function sinvSaveInvoice(){
   const custName = document.getElementById('sinv-cust-name')?.value.trim();
@@ -1471,12 +1819,410 @@ function sinvClear(){
   document.getElementById('sinv-items-body').innerHTML='';
   document.getElementById('sinv-doc-body').innerHTML='';
   document.getElementById('sinv-preview-wrap').style.display='none';
-  document.getElementById('sinv-tax').value='0';
-  sinvRecalc();
   sinvAddItem();
 }
 
+function sinvLhHead(addr1,addr2){
+  const logo=LH_HEADER.match(/src="([^"]+)/)?.[1]||'';
+  const a1=addr1?`<div style="font-size:9px;color:#333;">${escH(addr1)}</div>`:'';
+  const a2=addr2?`<div style="font-size:9px;color:#333;">${escH(addr2)}</div>`:'';
+  return`<div style="position:relative;margin:-30px -38px 20px -47px;background:#fff;border-bottom:1px solid #e0e0e0;">
+    <div style="position:absolute;left:0;top:0;bottom:0;width:9px;">
+      <div style="height:33.33%;background:#96d3ed;"></div>
+      <div style="height:33.33%;background:#fde864;"></div>
+      <div style="height:33.34%;background:#a6db55;"></div>
+    </div>
+    <div style="padding:14px 20px 12px 24px;display:flex;justify-content:space-between;align-items:center;">
+      <img src="${logo}" style="width:90px;height:auto;" alt="Logica Infoway">
+      <div style="text-align:right;">
+        <div style="font-family:'Britannic Bold','Arial Black',Arial,sans-serif;font-size:21px;font-weight:900;font-style:italic;color:#000099;">LOGICA INFOWAY LIMITED</div>
+      </div>
+    </div>
+    <div style="height:3px;display:flex;margin-left:9px;">
+      <div style="flex:1;background:#96d3ed;"></div>
+      <div style="flex:1;background:#fde864;"></div>
+      <div style="flex:1;background:#a6db55;"></div>
+    </div>
+  </div>`;
+}
+function sinvLhFoot(){
+  return`<div style="margin:20px -38px -30px -47px;border-top:1.5px solid #111;background:#fff;height:10px;"></div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DESCRIPTION MEMORY — works on file:// (no localStorage needed)
+// ═══════════════════════════════════════════════════════════════
+let _descMemory = [];
+
+function descLoad(){
+  try{
+    const raw = localStorage.getItem('desc_memory');
+    if(raw){ const p=JSON.parse(raw); _descMemory=p.map(d=>typeof d==='string'?{desc:d,hsn:''}:d); }
+  }catch(e){}
+  return _descMemory;
+}
+
+function descSave(desc, hsn){
+  if(!desc||!desc.trim()) return;
+  const d=desc.trim();
+  const prev = _descMemory.find(x => x.desc && x.desc.toLowerCase() === d.toLowerCase());
+  // If caller doesn't provide an HSN (or provides empty), preserve existing mapping.
+  let h=(hsn||'').trim();
+  if(!h && prev && prev.hsn) h = String(prev.hsn).trim();
+  _descMemory=_descMemory.filter(x=>x.desc.toLowerCase()!==d.toLowerCase());
+  _descMemory.unshift({desc:d,hsn:h});
+  if(_descMemory.length>100) _descMemory=_descMemory.slice(0,100);
+  try{ localStorage.setItem('desc_memory',JSON.stringify(_descMemory)); }catch(e){}
+  updateDatalist();
+}
+
+function descGetHsn(desc){
+  const e=_descMemory.find(d=>d.desc.toLowerCase()===desc.toLowerCase());
+  return e?e.hsn:'';
+}
+
+function updateDatalist(){
+  const dl=document.getElementById('desc-list');
+  if(!dl) return;
+  dl.innerHTML=_descMemory.map(d=>`<option value="${d.desc.replace(/"/g,'&quot;')}"></option>`).join('');
+}
+
+function descMakeInput(placeholder, onSelectCb){
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;width:100%;display:block;';
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = placeholder||'Description of goods';
+  inp.style.width = '100%';
+  inp.autocomplete = 'off';
+
+  // Inline dropdown menu inside the same card
+  const menu = document.createElement('div');
+  menu.style.cssText =
+    'position:absolute;left:0;right:0;top:100%;z-index:20;max-height:155px;overflow-y:auto;'+
+    'background:#fff;border:1px solid var(--border2);border-radius:6px;margin-top:2px;'+
+    'box-shadow:0 8px 20px rgba(15,23,42,0.18);font-size:12px;color:var(--ink3);display:none;';
+
+  function buildMenu(filter){
+    const q = (filter||'').trim().toLowerCase();
+    const items = _descMemory
+      .filter(d => d && d.desc)
+      .filter(d => !q || d.desc.toLowerCase().includes(q))
+      .slice(0, 10);
+    menu.innerHTML = '';
+    if(!items.length){
+      menu.style.display = 'none';
+      return;
+    }
+    items.forEach(d => {
+      const opt = document.createElement('div');
+      opt.textContent = d.desc;
+      opt.style.padding = '6px 8px';
+      opt.style.cursor = 'pointer';
+      opt.style.whiteSpace = 'nowrap';
+      opt.style.overflow = 'hidden';
+      opt.style.textOverflow = 'ellipsis';
+      opt.onmouseover = () => { opt.style.background = 'var(--s2)'; };
+      opt.onmouseout  = () => { opt.style.background = 'transparent'; };
+      opt.onmousedown = (e) => {
+        e.preventDefault(); // keep focus
+        const hsn = (d.hsn||'').trim();
+        inp.value = d.desc;
+        inp._currentHsn = hsn;
+        if(inp.value.trim()) descSave(inp.value.trim(), hsn);
+        if(onSelectCb) onSelectCb(inp, hsn);
+        menu.style.display = 'none';
+      };
+      menu.appendChild(opt);
+    });
+    menu.style.display = 'block';
+  }
+
+  function commit(){
+    const hsn = descGetHsn(inp.value);
+    inp._currentHsn = hsn;
+    if(inp.value.trim()) descSave(inp.value.trim(), hsn);
+    if(onSelectCb) onSelectCb(inp, hsn);
+  }
+  inp.addEventListener('focus', () => {
+    buildMenu(inp.value);
+  });
+  inp.addEventListener('change', commit);
+  inp.addEventListener('blur', () => {
+    setTimeout(() => { menu.style.display = 'none'; }, 120);
+    commit();
+  });
+  inp.addEventListener('input', ()=>{
+    const hsn = descGetHsn(inp.value);
+    inp._currentHsn = hsn;
+    if(onSelectCb) onSelectCb(inp, hsn);
+    buildMenu(inp.value);
+  });
+  wrap._input = inp;
+  wrap.appendChild(inp);
+  wrap.appendChild(menu);
+  return wrap;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PARTY MEMORY (Consignee + Buyers) → inline dropdown
+// ═══════════════════════════════════════════════════════════════════════
+let _consigneeMemory = [];
+
+function consigneeLoadMemory(){
+  try{
+    const raw = localStorage.getItem(KEY_CONSIGNEE);
+    _consigneeMemory = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    _consigneeMemory = [];
+  }
+  return _consigneeMemory;
+}
+
+function consigneeSaveFromForm(){
+  const name = g('cn')?.trim();
+  if(!name) return;
+  const obj = {
+    name,
+    addr1: g('ca1')?.trim() || '',
+    addr2: g('ca2')?.trim() || '',
+    trn:   g('ctrn')?.trim() || '',
+    contact: g('cc')?.trim() || '',
+    country: g('ccy')?.trim() || '',
+    pcar:  g('pcar')?.trim() || '',
+  };
+
+  const idx = _consigneeMemory.findIndex(x => (x.name||'').toLowerCase() === name.toLowerCase());
+  if(idx >= 0) _consigneeMemory[idx] = { ..._consigneeMemory[idx], ...obj };
+  else _consigneeMemory.unshift(obj);
+
+  if(_consigneeMemory.length > 100) _consigneeMemory = _consigneeMemory.slice(0,100);
+  try{ localStorage.setItem(KEY_CONSIGNEE, JSON.stringify(_consigneeMemory)); }catch(e){}
+}
+
+function consigneeGetOptions(filter){
+  const q = (filter||'').trim().toLowerCase();
+  return _consigneeMemory
+    .filter(x => x && x.name)
+    .filter(x => !q || x.name.toLowerCase().includes(q))
+    .slice(0,6);
+}
+
+function attachInlineDropdown(inputEl, optionsFn, onSelectFn){
+  if(!inputEl) return;
+  const fieldDiv = inputEl.parentElement;
+  if(!fieldDiv) return;
+
+  // Create wrapper to hold the menu (keeps it inside the same card UI)
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;width:100%;display:block;';
+
+  // Replace the input with wrapper, keeping IDs intact
+  fieldDiv.replaceChild(wrap, inputEl);
+  wrap.appendChild(inputEl);
+
+  inputEl.autocomplete = 'off';
+
+  const menu = document.createElement('div');
+  menu.style.cssText =
+    'position:absolute;left:0;right:0;top:100%;z-index:20;max-height:155px;overflow-y:auto;'+
+    'background:#fff;border:1px solid var(--border2);border-radius:6px;margin-top:2px;'+
+    'box-shadow:0 8px 20px rgba(15,23,42,0.18);font-size:12px;color:var(--ink3);display:none;';
+
+  function render(filter){
+    const items = optionsFn(filter) || [];
+    menu.innerHTML = '';
+    if(!items.length){
+      menu.style.display = 'none';
+      return;
+    }
+    items.forEach(item => {
+      const opt = document.createElement('div');
+      opt.textContent = item && item.name ? item.name : String(item);
+      opt.style.cssText = 'padding:6px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      opt.onmouseover = () => { opt.style.background = 'var(--s2)'; };
+      opt.onmouseout  = () => { opt.style.background = 'transparent'; };
+      opt.onmousedown = (e) => {
+        e.preventDefault();
+        onSelectFn(item);
+        menu.style.display = 'none';
+      };
+      menu.appendChild(opt);
+    });
+    menu.style.display = 'block';
+  }
+
+  inputEl.addEventListener('focus', () => render(inputEl.value));
+  inputEl.addEventListener('input', () => render(inputEl.value));
+  inputEl.addEventListener('blur', () => setTimeout(() => { menu.style.display = 'none'; }, 120));
+
+  wrap.appendChild(menu);
+}
+
+function buyerSaveFromForm(idx){
+  const name = g(`b${idx}-n`)?.trim();
+  if(!name) return;
+  const buyer = {
+    name,
+    addr1: g(`b${idx}-a1`)?.trim() || '',
+    addr2: g(`b${idx}-a2`)?.trim() || '',
+    trn:   g(`b${idx}-trn`)?.trim() || '',
+    contact: g(`b${idx}-con`)?.trim() || '',
+    country: g(`b${idx}-cy`)?.trim() || 'U.A.E.',
+    payterm: g(`b${idx}-pay`)?.trim() || 'After Inspection',
+    notes: '',
+    createdAt: new Date().toISOString()
+  };
+
+  const buyers = LS.get(KEY_BUYERS);
+  const existingIdx = buyers.findIndex(b => (b.name||'').toLowerCase() === name.toLowerCase());
+  if(existingIdx >= 0){
+    const prevCreatedAt = buyers[existingIdx]?.createdAt;
+    buyers[existingIdx] = { ...buyers[existingIdx], ...buyer, createdAt: prevCreatedAt || buyer.createdAt };
+  }else{
+    buyers.push(buyer);
+  }
+  LS.set(KEY_BUYERS, buyers);
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH SYSTEM
+// ═══════════════════════════════════════════════════════════════
+const AUTH_KEY = 'lil_users';
+
+function authGetUsers(){
+  try{ return JSON.parse(localStorage.getItem(AUTH_KEY)||'[]'); }catch(e){ return []; }
+}
+function authSaveUsers(users){
+  try{ localStorage.setItem(AUTH_KEY, JSON.stringify(users)); }catch(e){}
+}
+
+function authShowTab(tab){
+  // Hide all views
+  document.querySelectorAll('.auth-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+  // Clear messages
+  document.querySelectorAll('.auth-err,.auth-ok').forEach(e=>{e.classList.remove('show');e.textContent='';});
+  // Show selected
+  const view = document.getElementById('auth-'+tab);
+  if(view) view.classList.add('active');
+  // Highlight tab if it's signin or signup
+  if(tab==='signin'||tab==='signup'){
+    const tabs = document.querySelectorAll('.auth-tab');
+    if(tab==='signin') tabs[0].classList.add('active');
+    else tabs[1].classList.add('active');
+  }
+}
+
+function authShowErr(id, msg){ const e=document.getElementById(id); if(e){e.textContent=msg;e.classList.add('show');} }
+function authShowOk(id, msg){ const e=document.getElementById(id); if(e){e.textContent=msg;e.classList.add('show');} }
+function authClearMsg(id){ const e=document.getElementById(id); if(e){e.classList.remove('show');e.textContent='';} }
+
+function authSignIn(){
+  const email = document.getElementById('signin-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('signin-pass').value;
+  authClearMsg('signin-err');
+  if(!email||!pass){ authShowErr('signin-err','Please enter your email and password.'); return; }
+  const users = authGetUsers();
+  const user  = users.find(u=>u.email===email);
+  if(!user){ authShowErr('signin-err','No account found with that email address.'); return; }
+  if(user.pass!==btoa(pass)){ authShowErr('signin-err','Incorrect password.'); return; }
+  // Success
+  try{ localStorage.setItem('lil_session', JSON.stringify({email:user.email,name:user.name,ts:Date.now()})); }catch(e){}
+  document.getElementById('auth-screen').classList.remove('show');
+  const shell = document.querySelector('.shell');
+  if(shell) shell.style.display='';
+  switchTab('invoice');
+}
+
+function authSignUp(){
+  const name  = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('signup-pass').value;
+  const pass2 = document.getElementById('signup-pass2').value;
+  authClearMsg('signup-err'); authClearMsg('signup-ok');
+  if(!name){ authShowErr('signup-err','Please enter your full name.'); return; }
+  if(!email||!email.includes('@')){ authShowErr('signup-err','Please enter a valid email address.'); return; }
+  if(pass.length<6){ authShowErr('signup-err','Password must be at least 6 characters.'); return; }
+  if(pass!==pass2){ authShowErr('signup-err','Passwords do not match.'); return; }
+  const users = authGetUsers();
+  if(users.find(u=>u.email===email)){ authShowErr('signup-err','An account with this email already exists.'); return; }
+  users.push({name, email, pass:btoa(pass), created:Date.now()});
+  authSaveUsers(users);
+  authShowOk('signup-ok','Account created successfully! You can now sign in.');
+  // Auto-switch to sign in after 1.5s
+  setTimeout(()=>{ authShowTab('signin'); document.getElementById('signin-email').value=email; }, 1500);
+}
+
+let _fpVerified = false;
+function authForgotPass(){
+  const email = document.getElementById('fp-email').value.trim().toLowerCase();
+  authClearMsg('fp-err'); authClearMsg('fp-ok');
+  if(!_fpVerified){
+    // Step 1: verify email exists
+    if(!email){ authShowErr('fp-err','Please enter your email address.'); return; }
+    const users = authGetUsers();
+    if(!users.find(u=>u.email===email)){ authShowErr('fp-err','No account found with that email address.'); return; }
+    authShowOk('fp-ok','Email verified. Please enter your new password below.');
+    document.getElementById('fp-newpass-wrap').style.display='block';
+    document.getElementById('fp-btn').textContent='Set New Password';
+    document.getElementById('fp-email').disabled=true;
+    _fpVerified=true;
+  } else {
+    // Step 2: set new password
+    const newpass = document.getElementById('fp-newpass').value;
+    if(newpass.length<6){ authShowErr('fp-err','Password must be at least 6 characters.'); return; }
+    const users = authGetUsers();
+    const u = users.find(u=>u.email===email);
+    if(u){ u.pass=btoa(newpass); authSaveUsers(users); }
+    authShowOk('fp-ok','Password reset successfully! Redirecting to sign in...');
+    _fpVerified=false;
+    setTimeout(()=>{ authShowTab('signin'); document.getElementById('signin-email').value=email; }, 1800);
+  }
+}
+
+function authForgotUser(){
+  const email = document.getElementById('fu-email').value.trim().toLowerCase();
+  authClearMsg('fu-err'); authClearMsg('fu-ok');
+  if(!email){ authShowErr('fu-err','Please enter your email address.'); return; }
+  const users = authGetUsers();
+  const user  = users.find(u=>u.email===email);
+  if(!user){ authShowErr('fu-err','No account found with that email address.'); return; }
+  authShowOk('fu-ok','Your username (email) is: '+user.email+'\nAccount name: '+user.name);
+}
+
+function authLogout(){
+  try{ localStorage.removeItem('lil_session'); }catch(e){}
+  document.getElementById('auth-screen').classList.add('show');
+}
+
 window.onload=()=>{
+  // ── Splash → Auth/Portal flow ──
+  const shell = document.querySelector('.shell');
+  if(shell) shell.style.display='none';
+
+  setTimeout(()=>{
+    const splash = document.getElementById('splash-screen');
+    splash.classList.add('fade-out');
+    setTimeout(()=>{
+      splash.style.display='none';
+      // Check if already signed in
+      try{
+        const sess = JSON.parse(localStorage.getItem('lil_session')||'null');
+        if(sess && (Date.now()-sess.ts < 8*60*60*1000)){
+          // Valid session — go straight to portal
+          if(shell) shell.style.display='';
+          return;
+        }
+      }catch(e){}
+      // Show auth screen
+      document.getElementById('auth-screen').classList.add('show');
+    }, 650);
+  }, 2800);
+
+
   loadSettings();
   const t=new Date(),fmt=d=>d.toISOString().split('T')[0];
   document.getElementById('idate').value=fmt(t);
@@ -1491,6 +2237,41 @@ window.onload=()=>{
   renderArchive();
   renderTracker();
   renderFinance();
+  descLoad();
+  consigneeLoadMemory();
+  // Consignee inline dropdown (company name)
+  const cnEl = document.getElementById('cn');
+  if(cnEl){
+    attachInlineDropdown(
+      cnEl,
+      (filter) => consigneeGetOptions(filter),
+      (b) => {
+        if(!b) return;
+        document.getElementById('cn').value = b.name || '';
+        document.getElementById('ca1').value = b.addr1 || '';
+        document.getElementById('ca2').value = b.addr2 || '';
+        document.getElementById('ctrn').value = b.trn || '';
+        document.getElementById('cc').value = b.contact || '';
+        document.getElementById('ccy').value = b.country || '';
+        document.getElementById('pcar').value = b.pcar || '';
+      }
+    );
+  }
+  // Save consignee to memory after manual edits (once user leaves a field)
+  ['cn','ca1','ca2','ctrn','cc','ccy','pcar'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.addEventListener('blur', () => consigneeSaveFromForm());
+    }
+  });
+  if(_descMemory.length===0){
+    [{desc:'MAC BOOK AIR M4 16/256GB (MW123HN/A) Made in CHINA (NON ACTIVATED)',hsn:'84713010'},
+     {desc:'I PHONE 17 256GB BLACK MADE IN CHINA (NON ACTIVATED)',hsn:'85171300'},
+     {desc:'I PHONE 17 256GB WHITE MADE IN CHINA (NON ACTIVATED)',hsn:'85171300'},
+     {desc:'SAMSUNG GALAXY S25 128GB BLACK MADE IN INDIA (NON ACTIVATED)',hsn:'85171300'}
+    ].forEach(d=>_descMemory.push(d));
+  }
+  updateDatalist();
   invLoad();
   invRender();
   sinvAddItem();
@@ -1653,6 +2434,41 @@ function addBuyer(preset){
   </div>
   ${idx>0?`<button class="btn btn-danger btn-sm" onclick="remBuyer(${idx})">Remove</button>`:''}`;
   panes.appendChild(pane);
+
+  // Attach saved-name dropdown to buyer company name input
+  const nameInp = document.getElementById(`b${idx}-n`);
+  if(nameInp){
+    attachInlineDropdown(
+      nameInp,
+      (filter) => {
+        const buyers = LS.get(KEY_BUYERS);
+        const q=(filter||'').trim().toLowerCase();
+        return buyers
+          .filter(b=>b && b.name)
+          .filter(b=>!q || b.name.toLowerCase().includes(q))
+          .slice(0,6);
+      },
+      (b) => {
+        if(!b) return;
+        document.getElementById(`b${idx}-n`).value = b.name || '';
+        document.getElementById(`b${idx}-a1`).value = b.addr1 || '';
+        document.getElementById(`b${idx}-a2`).value = b.addr2 || '';
+        document.getElementById(`b${idx}-trn`).value = b.trn || '';
+        document.getElementById(`b${idx}-con`).value = b.contact || '';
+        document.getElementById(`b${idx}-cy`).value  = b.country || 'U.A.E.';
+        document.getElementById(`b${idx}-pay`).value = b.payterm || 'After Inspection';
+      }
+    );
+
+    // Save buyer card to memory after manual entry
+    ['b'+idx+'-n','b'+idx+'-a1','b'+idx+'-a2','b'+idx+'-trn','b'+idx+'-con','b'+idx+'-cy','b'+idx+'-pay']
+      .forEach(id => {
+        const el = document.getElementById(id);
+        if(el){
+          el.addEventListener('blur', ()=> buyerSaveFromForm(idx));
+        }
+      });
+  }
 }
 
 function switchBTab(i){
@@ -1730,17 +2546,40 @@ function pickBuyerForEntry(i){
 // LINE ITEMS
 // ═══════════════════════════════════════════════════════════════
 function addItem(pf){
-  const tr=document.createElement('tr');
-  tr.innerHTML=`
-    <td><input type="text" value="${pf?'MAC BOOK AIR M4 16/256GB (MW123HN/A) Made in CHINA (NON ACTIVATED)':''}" placeholder="Description of goods"></td>
-    <td><input type="text" value="${pf?'84713010':''}" placeholder="HSN Code"></td>
-    <td><input type="number" value="${pf?200:''}" placeholder="0" min="1" oninput="rcRow(this)"></td>
-    <td><input type="number" value="${pf?845:''}" placeholder="0.00" step="0.01" oninput="rcRow(this)"></td>
-    <td><input type="number" readonly value="${pf?169000:''}"></td>
-    <td><input type="number" readonly value=""></td>
-    <td><button class="ic-btn" onclick="this.closest('tr').remove();updatePlTotal();" title="Remove row">✕</button></td>`;
+  const tr = document.createElement('tr');
+
+  // Description cell with autocomplete
+  const descTd = document.createElement('td');
+  const descWrap = descMakeInput('Description of goods', (inp, hsn) => {
+    const hsnInp = tr.querySelector('input[placeholder="HSN Code"]');
+    if(hsnInp && hsn) hsnInp.value = hsn;
+    rcRow(tr.querySelectorAll('input[type=number]')[0]);
+  });
+  if(pf) descWrap._input.value = 'MAC BOOK AIR M4 16/256GB (MW123HN/A) Made in CHINA (NON ACTIVATED)';
+  descTd.appendChild(descWrap);
+
+  // Remaining cells
+  const rest = document.createElement('template');
+  rest.innerHTML =
+    `<td><input type="text" value="${pf?'84713010':''}" placeholder="HSN Code"></td>`+
+    `<td><input type="number" value="${pf?200:''}" placeholder="0" min="1" oninput="rcRow(this)"></td>`+
+    `<td><input type="number" value="${pf?845:''}" placeholder="0.00" step="0.01" oninput="rcRow(this)"></td>`+
+    `<td><input type="number" readonly value="${pf?169000:''}"></td>`+
+    `<td><input type="number" readonly value=""></td>`+
+    `<td><button class="ic-btn" onclick="this.closest('tr').remove();updatePlTotal();" title="Remove row">✕</button></td>`;
+  tr.appendChild(descTd);
+  rest.content.childNodes.forEach(n => tr.appendChild(n.cloneNode(true)));
+
   document.getElementById('ibody').appendChild(tr);
-  if(pf)rcRow(tr.querySelectorAll('input[type=number]')[0]);
+  const hsnInp = tr.querySelector('input[placeholder="HSN Code"]');
+  if(hsnInp){
+    hsnInp.addEventListener('blur', ()=>{
+      const desc = descWrap._input.value.trim();
+      const hsn  = hsnInp.value.trim();
+      if(desc && hsn) descSave(desc, hsn);
+    });
+  }
+  if(pf) rcRow(tr.querySelectorAll('input[type=number]')[0]);
 }
 
 function rcRow(el){
@@ -1782,6 +2621,11 @@ function loadSettings(){
 // ═══════════════════════════════════════════════════════════════
 function generateAll(){
   const items=getItems();
+  document.querySelectorAll('#ibody tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input');
+    const desc=ins[0]?.value.trim(), hsn=ins[1]?.value.trim();
+    if(desc) descSave(desc, hsn||'');
+  });
   if(!items.length){showAlert('form-alert','a-err','Please add at least one line item.');return;}
   showL('Generating all export documents…');
   setTimeout(()=>{
@@ -2223,7 +3067,8 @@ function printInsBill(){
   const billHTML=rCI(ctx);
   const styleContent=document.querySelector('style').textContent;
   const win=window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Export Bill ${d.ino}</title><style>body{font-family:Georgia,serif;font-size:11.5px;color:#111;padding:24px;}${styleContent}</style></head><body>${billHTML}</body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><title>Export Bill ${d.ino}</title><style>body{font-family:Georgia,serif;font-size:11.5px;color:#111;padding:24px;}${styleContent}</style></head><body>${billHTML}<datalist id="desc-list"></datalist>
+</body></html>`);
   win.document.close();win.focus();
   setTimeout(()=>win.print(),400);
 }
@@ -3313,46 +4158,89 @@ function renderPlTable(){
     }
   });
 
-  // Render
-  let html = '';
+  // Render (DOM-based so Description uses the same inline dropdown UI)
+  tbody.innerHTML = '';
   groups.forEach(grp => {
     const span = grp.rows.length;
     const isMixed = span > 1;
     grp.rows.forEach((row, ri) => {
       const isFirst = ri === 0;
-      html += '<tr data-pl-row data-row-idx="'+row.rowIdx+'">';
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-pl-row', '');
+      tr.setAttribute('data-row-idx', row.rowIdx);
 
       // Box No. cell — only on first row of group, rowspan=span
       if(isFirst){
-        html += '<td rowspan="'+span+'" data-pl-box="'+escH(grp.boxLabel)+'" style="'+
-          'vertical-align:middle;text-align:center;font-weight:700;font-size:13px;'+
-          (isMixed ? 'background:var(--accent-l);border-left:3px solid var(--accent);' : '')+
-          '">'+ escH(grp.boxLabel) +
-          (isMixed ? '<div style="font-size:9px;font-weight:400;color:var(--accent);margin-top:2px;">'+span+' items</div>' : '') +
-          '</td>';
+        const td = document.createElement('td');
+        td.rowSpan = span;
+        td.dataset.plBox = grp.boxLabel;
+        td.style.cssText =
+          'vertical-align:middle;text-align:center;font-weight:700;font-size:13px;' +
+          (isMixed ? 'background:var(--accent-l);border-left:3px solid var(--accent);' : '');
+        td.textContent = grp.boxLabel || '';
+        if(isMixed){
+          const meta = document.createElement('div');
+          meta.style.cssText = 'font-size:9px;font-weight:400;color:var(--accent);margin-top:2px;';
+          meta.textContent = span+' items';
+          td.appendChild(meta);
+        }
+        tr.appendChild(td);
       }
 
-      // Description
-      html += '<td><input data-pl-desc type="text" value="'+escH(row.desc)+'" placeholder="Description of goods" '+
-        'oninput="plRows['+row.rowIdx+'].desc=this.value;" '+
-        'style="width:100%;"></td>';
+      // Description (inline dropdown)
+      const descTd = document.createElement('td');
+      const wrap = descMakeInput('Description of goods', (inp/*, hsn*/)=>{
+        // Keep the underlying packing list row in sync
+        if(plRows[row.rowIdx]) plRows[row.rowIdx].desc = inp.value;
+      });
+      wrap._input.value = row.desc || '';
+      wrap._input._currentHsn = descGetHsn(wrap._input.value);
+      descTd.appendChild(wrap);
+      tr.appendChild(descTd);
 
       // Pcs
-      html += '<td><input data-pl-pcs type="number" value="'+(row.pcs||'')+'" placeholder="0" min="1" '+
-        'oninput="plRows['+row.rowIdx+'].pcs=+this.value||0;renderPlTotals();" '+
-        'style="width:100%;text-align:right;"></td>';
+      const pcsTd = document.createElement('td');
+      const pcsInp = document.createElement('input');
+      pcsInp.type = 'number';
+      pcsInp.dataset.plPcs = '';
+      pcsInp.value = (row.pcs || row.pcs === 0) ? String(row.pcs) : '';
+      pcsInp.placeholder = '0';
+      pcsInp.min = '1';
+      pcsInp.style.cssText = 'width:100%;text-align:right;';
+      pcsInp.oninput = ()=>{
+        const v = +pcsInp.value || 0;
+        if(plRows[row.rowIdx]) plRows[row.rowIdx].pcs = v;
+        // Keep the readonly total aligned with the pcs input
+        totInp.value = v ? String(v) : '';
+        renderPlTotals();
+      };
+      pcsTd.appendChild(pcsInp);
+      tr.appendChild(pcsTd);
 
       // Readonly total (same as pcs — 1 item per row)
-      html += '<td><input type="number" value="'+(row.pcs||'')+'" readonly style="width:100%;text-align:right;background:var(--s2);"></td>';
+      const totTd = document.createElement('td');
+      const totInp = document.createElement('input');
+      totInp.type = 'number';
+      totInp.readOnly = true;
+      totInp.value = (row.pcs || row.pcs === 0) ? String(row.pcs) : '';
+      totInp.style.cssText = 'width:100%;text-align:right;background:var(--s2);';
+      totTd.appendChild(totInp);
+      tr.appendChild(totTd);
 
       // Delete button
-      html += '<td><button class="ic-btn" onclick="plDeleteRow('+row.rowIdx+')" title="Remove row">✕</button></td>';
+      const delTd = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.className = 'ic-btn';
+      btn.textContent = '✕';
+      btn.title = 'Remove row';
+      btn.onclick = ()=>plDeleteRow(row.rowIdx);
+      delTd.appendChild(btn);
+      tr.appendChild(delTd);
 
-      html += '</tr>';
+      tbody.appendChild(tr);
     });
   });
 
-  tbody.innerHTML = html;
   renderPlTotals();
 }
 
