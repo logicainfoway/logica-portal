@@ -309,6 +309,125 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 .divider-label{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:0.6px;}
 .divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
+/* Sales invoicing list (professional layout) */
+.sinv-list-wrap{
+  padding:10px 12px 14px;
+}
+.sinv-list-head{
+  display:grid;
+  grid-template-columns: 1.15fr 1.25fr 0.70fr 1.25fr 0.75fr 0.70fr 0.80fr;
+  gap:12px;
+  padding:10px 10px;
+  background:var(--s3);
+  border-bottom:1px solid var(--border);
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:0.6px;
+  color:var(--ink3);
+  text-transform:uppercase;
+}
+.sinv-list-body{
+  display:flex;
+  flex-direction:column;
+}
+.sinv-row{
+  display:grid;
+  grid-template-columns: 1.15fr 1.25fr 0.70fr 1.25fr 0.75fr 0.70fr 0.80fr;
+  gap:12px;
+  padding:12px 10px;
+  align-items:center;
+  border-bottom:1px solid var(--border);
+  background:#fff;
+}
+.sinv-row:nth-child(even){background:linear-gradient(0deg, rgba(248,247,244,0.65), rgba(248,247,244,0.65));}
+.sinv-cell{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12.5px;
+  color:var(--ink);
+}
+.sinv-invno{font-weight:800; letter-spacing:0.2px;}
+.sinv-muted{color:var(--ink3); font-weight:600;}
+.sinv-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.sinv-list-empty{
+  padding:26px 18px;
+  text-align:center;
+  color:var(--ink3);
+  font-size:12.5px;
+}
+
+/* Paid/Unpaid toggle (label inside, portal-grade) */
+.sinv-pay-toggle{
+  width:120px;
+  height:30px;
+  border-radius:999px;
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  border:1px solid var(--border2);
+  background:var(--amber-l);
+  transition:background .15s,border-color .15s,box-shadow .15s,transform .05s;
+  user-select:none;
+}
+.sinv-pay-toggle:active{transform:translateY(0.5px);}
+.sinv-pay-toggle[data-paid="true"]{
+  background:var(--green-l);
+  border-color:#86efac;
+}
+.sinv-pay-toggle .sinv-pay-text{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+}
+.sinv-pay-toggle[data-paid="true"] .sinv-pay-text{color:#111;}       /* black */
+.sinv-pay-toggle[data-paid="false"] .sinv-pay-text{color:var(--red);} /* red */
+.sinv-pay-toggle:hover{box-shadow:0 0 0 3px rgba(37,99,176,0.10);}
+
+@media (max-width: 980px){
+  .sinv-list-head,
+  .sinv-row{
+    grid-template-columns: 1.2fr 1.1fr 0.75fr 1.2fr 0.8fr 0.8fr 0.9fr;
+    gap:10px;
+  }
+  .sinv-pay-toggle{width:110px;height:28px;}
+}
+
+.sinv-pay-toggle{
+  width:110px;height:28px;border-radius:999px;position:relative;display:inline-flex;
+  align-items:center;justify-content:center;cursor:pointer;
+  border:1px solid var(--border2);
+  background:var(--amber-l);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.02);
+  transition:background .15s,border-color .15s,box-shadow .15s;
+  user-select:none;
+}
+.sinv-pay-toggle[data-paid="true"]{
+  background:var(--green-l);
+  border-color:#86efac;
+}
+.sinv-pay-toggle .sinv-pay-text{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.2px;
+  text-transform:uppercase;
+}
+.sinv-pay-toggle[data-paid="true"] .sinv-pay-text{color:#111;}     /* black */
+.sinv-pay-toggle[data-paid="false"] .sinv-pay-text{color:var(--red);}/* red */
+.sinv-pay-toggle:hover{
+  box-shadow:0 0 0 3px rgba(37,99,176,0.10);
+  border-color:#b9c7dd;
+}
+
 
 
 
@@ -481,14 +600,14 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="modal-head"><h3 id="bm-title">Add Buyer</h3><button class="modal-close" onclick="closeBuyerModal()">×</button></div>
     <div class="modal-body">
       <div class="grid g2" style="gap:12px;">
-        <div class="field" style="grid-column:1/-1"><label>Company Name *</label><input id="bm-name" placeholder="e.g. AMOS LLC FZE TRADING"></div>
-        <div class="field"><label>Address Line 1</label><input id="bm-a1" placeholder="Building / Zone / Street"></div>
-        <div class="field"><label>Address Line 2</label><input id="bm-a2" placeholder="City, Country / PO Box"></div>
+        <div class="field" style="grid-column:1/-1"><label>Company Name *</label><input id="bm-name"></div>
+        <div class="field"><label>Address Line 1</label><input id="bm-a1"></div>
+        <div class="field"><label>Address Line 2</label><input id="bm-a2"></div>
         <div class="field"><label>TRN / Tax ID</label><input id="bm-trn"></div>
         <div class="field"><label>Contact No.</label><input id="bm-con"></div>
-        <div class="field"><label>Country</label><input id="bm-cy" value="U.A.E."></div>
-        <div class="field"><label>Default Payment Terms</label><input id="bm-pay" value="After Inspection"></div>
-        <div class="field"><label>Notes</label><input id="bm-notes" placeholder="Optional notes"></div>
+        <div class="field"><label>Country</label><input id="bm-cy"></div>
+        <div class="field"><label>Default Payment Terms</label><input id="bm-pay"></div>
+        <div class="field"><label>Notes</label><input id="bm-notes"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -542,8 +661,8 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <!-- SIGN IN -->
     <div class="auth-view active" id="auth-signin">
       <div class="auth-err" id="signin-err"></div>
-      <div class="auth-field"><label>Email Address</label><input type="email" id="signin-email" placeholder="you@example.com"></div>
-      <div class="auth-field"><label>Password</label><input type="password" id="signin-pass" placeholder="Your password" onkeydown="if(event.key==='Enter')authSignIn()"></div>
+      <div class="auth-field"><label>Email Address</label><input type="email" id="signin-email"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signin-pass" onkeydown="if(event.key==='Enter')authSignIn()"></div>
       <button class="auth-btn" onclick="authSignIn()">Sign In</button>
       <div class="auth-links">
         <span class="auth-link" onclick="authShowTab('forgot-pass')">Forgot Password?</span>
@@ -555,10 +674,10 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="auth-view" id="auth-signup">
       <div class="auth-err" id="signup-err"></div>
       <div class="auth-ok"  id="signup-ok"></div>
-      <div class="auth-field"><label>Full Name</label><input type="text" id="signup-name" placeholder="Your full name"></div>
-      <div class="auth-field"><label>Email Address (Username)</label><input type="email" id="signup-email" placeholder="you@example.com"></div>
-      <div class="auth-field"><label>Create Password</label><input type="password" id="signup-pass" placeholder="Min 6 characters"></div>
-      <div class="auth-field"><label>Confirm Password</label><input type="password" id="signup-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')authSignUp()"></div>
+      <div class="auth-field"><label>Full Name</label><input type="text" id="signup-name"></div>
+      <div class="auth-field"><label>Email Address (Username)</label><input type="email" id="signup-email"></div>
+      <div class="auth-field"><label>Create Password</label><input type="password" id="signup-pass"></div>
+      <div class="auth-field"><label>Confirm Password</label><input type="password" id="signup-pass2" onkeydown="if(event.key==='Enter')authSignUp()"></div>
       <button class="auth-btn" onclick="authSignUp()">Create Account</button>
     </div>
 
@@ -567,8 +686,8 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="auth-err" id="fp-err"></div>
       <div class="auth-ok"  id="fp-ok"></div>
       <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">Enter your email address to reset your password.</p>
-      <div class="auth-field"><label>Email Address</label><input type="email" id="fp-email" placeholder="you@example.com"></div>
-      <div class="auth-field" id="fp-newpass-wrap" style="display:none;"><label>New Password</label><input type="password" id="fp-newpass" placeholder="New password"></div>
+      <div class="auth-field"><label>Email Address</label><input type="email" id="fp-email"></div>
+      <div class="auth-field" id="fp-newpass-wrap" style="display:none;"><label>New Password</label><input type="password" id="fp-newpass"></div>
       <button class="auth-btn" id="fp-btn" onclick="authForgotPass()">Verify & Reset</button>
       <button class="auth-btn secondary" onclick="authShowTab('signin')">← Back to Sign In</button>
     </div>
@@ -578,7 +697,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="auth-err" id="fu-err"></div>
       <div class="auth-ok"  id="fu-ok"></div>
       <p style="font-size:13px;color:#6b7280;margin-bottom:16px;">Enter your email address and we'll show you your username.</p>
-      <div class="auth-field"><label>Email Address</label><input type="email" id="fu-email" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Email Address</label><input type="email" id="fu-email"></div>
       <button class="auth-btn" onclick="authForgotUser()">Find My Username</button>
       <button class="auth-btn secondary" onclick="authShowTab('signin')">← Back to Sign In</button>
     </div>
@@ -600,7 +719,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="ni active" id="nav-invoice" onclick="switchTab('invoice')"><span class="ni-icon">🧾</span>Shipment Lodging</div>
     <div class="ni" id="nav-salesinv" onclick="switchTab('salesinv')"><span class="ni-icon">🧾</span>Sales Invoicing</div>
     <div class="sb-section">Management</div>
-    <div class="ni" id="nav-inventory" onclick="switchTab('inventory')"><span class="ni-icon">📦</span>Inventory Management</div>
+    <div class="ni" id="nav-inventory" onclick="switchTab('inventory')"><span class="ni-icon">📦</span>Outgoing Inventory</div>
     <div class="sb-section">System</div>
     <div class="ni" id="nav-settings" onclick="switchTab('settings')"><span class="ni-icon">⚙️</span>Company Settings</div>
   </nav>
@@ -649,7 +768,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="card-head"><div class="sec-ic">🔢</div><h3>Invoice Reference</h3></div>
       <div class="card-body"><div class="grid g4">
         <div class="field"><label>Financial Year</label><select id="fy"><option>25-26</option><option>26-27</option><option>27-28</option></select></div>
-        <div class="field"><label>Shipment No.</label><input type="number" id="sno" value="65" min="1"></div>
+        <div class="field"><label>Shipment No.</label><input type="number" id="sno" value="" min="1"></div>
         <div class="field"><label>Invoice No. (auto)</label><input id="ino" readonly></div>
         <div class="field"><label>PO No. (auto)</label><input id="pno" readonly></div>
         <div class="field"><label>Invoice Date</label><input type="date" id="idate"></div>
@@ -657,10 +776,10 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
         <div class="field">
           <label>Exchange Rate &#8377;/$ <span id="xrate-src"></span></label>
           <div style="display:flex;gap:6px;">
-            <input type="number" id="xrate" value="92.55" step="0.01" style="flex:1;">
-            <button id="xrate-btn" onclick="fetchDGFTRate()" class="btn btn-secondary btn-sm" style="flex-shrink:0;">Refresh</button>
+            <input type="number" id="xrate" value="" step="0.01" style="flex:1;">
+            <button id="xrate-btn" onclick="fetchDGFTRate()" class="btn btn-secondary btn-sm" style="flex-shrink:0;">Check Rate</button>
           </div>
-          <div id="xrate-hint" class="hint">DGFT Customs USD <strong>Export Rate</strong> — last updated 20-Mar-2026. Updates fortnightly. Click Refresh to check DGFT. <a href="https://www.dgft.gov.in/CP/?opt=currency-list-exchange-rates" target="_blank" style="color:var(--accent);">Open DGFT &#8599;</a></div>
+          <div id="xrate-hint" class="hint">DGFT Customs USD <strong>Export Rate</strong> — last updated 20-Mar-2026. Updates fortnightly. Click Check Rate to check DGFT. <a href="https://www.dgft.gov.in/CP/?opt=currency-list-exchange-rates" target="_blank" style="color:var(--accent);">Open DGFT &#8599;</a></div>
         </div>
         <div class="field"><label>IGST Rate %</label><input type="number" id="igst" value="18" readonly style="background:var(--s2);color:var(--ink2);cursor:default;"><div class="hint">Fixed at 18% per GST</div></div>
       </div></div>
@@ -670,12 +789,12 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="card">
       <div class="card-head"><div class="sec-ic">🚢</div><h3>Consignee (Freight Forwarder)</h3><span class="sub">The logistics party handling shipment</span></div>
       <div class="card-body"><div class="grid g3">
-        <div class="field" style="grid-column:1/-1"><label>Company Name</label><input id="cn" value="CROWN LOGISTICS FZCO"></div>
-        <div class="field"><label>Address Line 1</label><input id="ca1" value="G-12 Warehouse, Dubai Airport Free Zone"></div>
-        <div class="field"><label>Address Line 2</label><input id="ca2" value="Po Box: 54620 Dubai, U.A.E."></div>
-        <div class="field"><label>TRN / Tax ID</label><input id="ctrn" value="100433151600003"></div>
-        <div class="field"><label>Contact No.</label><input id="cc" value="+97142386222"></div>
-        <div class="field"><label>Country</label><input id="ccy" value="U.A.E."></div>
+        <div class="field" style="grid-column:1/-1"><label>Company Name</label><input id="cn" value=""></div>
+        <div class="field"><label>Address Line 1</label><input id="ca1" value=""></div>
+        <div class="field"><label>Address Line 2</label><input id="ca2" value=""></div>
+        <div class="field"><label>TRN / Tax ID</label><input id="ctrn" value=""></div>
+        <div class="field"><label>Contact No.</label><input id="cc" value=""></div>
+        <div class="field"><label>Country</label><input id="ccy" value=""></div>
         <div class="field"><label>Per-Carriage</label><input id="pcar" value="N/A"></div>
       </div></div>
     </div>
@@ -698,13 +817,31 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="card-head"><div class="sec-ic">✈️</div><h3>Shipment Route & Terms</h3></div>
       <div class="card-body"><div class="grid g4">
         <div class="field"><label>Mode</label><select id="mode"><option>BY AIR</option><option>BY SEA</option><option>BY ROAD</option></select></div>
-        <div class="field"><label>Port of Loading</label><input id="pol" value="NEW DELHI"></div>
-        <div class="field"><label>Port of Discharge</label><input id="pod" value="DUBAI (U.A.E.)"></div>
-        <div class="field"><label>Final Destination</label><input id="dest" value="DUBAI (U.A.E.)"></div>
-        <div class="field"><label>Country of Origin</label><input id="coo" value="INDIA"></div>
-        <div class="field"><label>Delivery Term</label><input id="dterm" value="CIF, Dubai"></div>
-        <div class="field"><label>Default Payment Terms</label><input id="pterm" value="After Inspection"></div>
-        <div class="field"><label>Gross Weight (kg)</label><input type="number" id="gweight" placeholder="e.g. 450"></div>
+        <div class="field"><label>Port of Loading</label>
+          <select id="pol">
+            <option value="New Delhi" selected>New Delhi</option>
+            <option value="Mumbai">Mumbai</option>
+            <option value="Chennai">Chennai</option>
+            <option value="Kolkata">Kolkata</option>
+          </select>
+        </div>
+        <div class="field"><label>Port of Discharge</label>
+          <select id="pod">
+            <option value="Dubai, U.A.E." selected>Dubai, U.A.E.</option>
+            <option value="Jebel Ali, U.A.E.">Jebel Ali, U.A.E.</option>
+            <option value="Abu Dhabi, U.A.E.">Abu Dhabi, U.A.E.</option>
+          </select>
+        </div>
+        <div class="field"><label>Final Destination</label>
+          <select id="dest">
+            <option value="Dubai, U.A.E." selected>Dubai, U.A.E.</option>
+            <option value="Jebel Ali, U.A.E.">Jebel Ali, U.A.E.</option>
+            <option value="Abu Dhabi, U.A.E.">Abu Dhabi, U.A.E.</option>
+          </select>
+        </div>
+        <div class="field"><label>Country of Origin</label><input id="coo" value="India"></div>
+        <div class="field"><label>Delivery Term</label><input id="dterm" placeholder="CIF, Dubai"></div>
+        <div class="field"><label>Default Payment Terms</label><input id="pterm" value="After inspection"></div>
       </div></div>
     </div>
 
@@ -726,8 +863,8 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     </div>
 
     <!-- Remarks & insurance hardcoded - not shown in form -->
-    <input type="hidden" id="rmk" value="# All standard accessories as original pack&#10;# Asian Model only in standard packing">
-    <input type="hidden" id="insp" value="110">
+    <input type="hidden" id="rmk" value="">
+    <input type="hidden" id="insp" value="">
 
     <!-- Packing List -->
     <div class="card">
@@ -828,7 +965,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
           </div>
           <div class="field">
             <label>Carrier/Airline</label>
-            <input type="text" id="ins-carrier" placeholder="e.g. IndiGo Cargo, Air India" oninput="rebuildInsMail()">
+            <input type="text" id="ins-carrier" oninput="rebuildInsMail()">
           </div>
         </div>
       </div>
@@ -856,7 +993,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
           </div>
           <div class="field">
             <label>Invoice Value (INR)</label>
-            <input type="text" id="ins-inr" oninput="rebuildInsMail()" placeholder="Auto-filled from invoice">
+            <input type="text" id="ins-inr" oninput="rebuildInsMail()">
           </div>
           <div class="field">
             <label>Consignee</label>
@@ -908,313 +1045,29 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 </div><!-- /panel-invoice -->
 
 <!-- ==========================
-     TAB: INVENTORY MANAGEMENT
+     TAB: OUTGOING INVENTORY
 ========================== -->
 <div class="panel" id="panel-inventory">
-
-  <!-- Inventory sub-tab bar -->
-  <div class="tab-bar" id="inv-tab-bar">
-    <div class="tab-item active" id="inv-tab-purchase" onclick="invSwitchTab('purchase')"><span class="tab-icon">🛒</span>Purchase Entries</div>
-    <div class="tab-item" id="inv-tab-sales" onclick="invSwitchTab('sales')"><span class="tab-icon">💰</span>Sales Entries</div>
-    <div class="tab-item" id="inv-tab-stock" onclick="invSwitchTab('stock')"><span class="tab-icon">📊</span>Stock View</div>
-    <div class="tab-item" id="inv-tab-transfer" onclick="invSwitchTab('transfer')"><span class="tab-icon">✈️</span>Shipment Transfer</div>
+  <div class="pg-head">
+    <h2>Outgoing Inventory</h2>
+    <p>Auto-built from generated Commercial Invoices. Stock remains until Sales Invoices are marked as paid.</p>
   </div>
 
-  <!-- ── PURCHASE ENTRIES ── -->
-  <div id="inv-panel-purchase" style="padding-top:18px;">
-    <div class="card">
-      <div class="card-head">
-        <div class="sec-ic" style="background:#dcfce7;color:#166534;">🛒</div>
-        <h3>New Purchase Entry</h3>
-        <span class="sub">Add stock purchased in India — updates India state inventory</span>
-      </div>
-      <div class="card-body">
-        <div class="grid g3">
-          <div class="field">
-            <label>Purchase Date</label>
-            <input type="date" id="inv-p-date">
-          </div>
-          <div class="field">
-            <label>Indian State</label>
-            <select id="inv-p-state">
-              <option value="">Select State</option>
-              <option>Delhi</option><option>Maharashtra</option><option>Karnataka</option>
-              <option>Tamil Nadu</option><option>Gujarat</option><option>Telangana</option>
-              <option>West Bengal</option><option>Rajasthan</option><option>Uttar Pradesh</option>
-              <option>Haryana</option><option>Punjab</option><option>Madhya Pradesh</option>
-              <option>Andhra Pradesh</option><option>Kerala</option><option>Odisha</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Supplier Name</label>
-            <input type="text" id="inv-p-supplier" placeholder="Supplier / Vendor name">
-          </div>
-          <div class="field">
-            <label>Product / Model</label>
-            <input type="text" id="inv-p-product" placeholder="e.g. Samsung Galaxy A15">
-          </div>
-          <div class="field">
-            <label>HSN Code</label>
-            <input type="text" id="inv-p-hsn" placeholder="e.g. 85171200">
-          </div>
-          <div class="field">
-            <label>Quantity (Pcs)</label>
-            <input type="number" id="inv-p-qty" min="1" placeholder="0">
-          </div>
-          <div class="field">
-            <label>Unit Cost (₹)</label>
-            <input type="number" id="inv-p-cost" step="0.01" placeholder="0.00">
-          </div>
-          <div class="field">
-            <label>Total Value (₹)</label>
-            <input type="number" id="inv-p-total" readonly style="background:var(--s2);color:var(--ink2);">
-          </div>
-          <div class="field">
-            <label>Invoice / Bill No.</label>
-            <input type="text" id="inv-p-billno" placeholder="Supplier bill number">
-          </div>
-          <div class="field" style="grid-column:span 2;">
-            <label>Remarks</label>
-            <input type="text" id="inv-p-remarks" placeholder="Optional notes">
-          </div>
-        </div>
-        <div class="btn-row" style="margin-top:14px;">
-          <button class="btn btn-primary" onclick="invAddPurchase()">＋ Add Purchase Entry</button>
-        </div>
-      </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="sec-ic">📊</div><h3>Destination Stock Sheets</h3>
+      <span class="sub">Net stock by destination (Shipped − Paid Sales)</span>
     </div>
-
-    <div class="card">
-      <div class="card-head">
-        <div class="sec-ic" style="background:#dcfce7;color:#166534;">📋</div>
-        <h3>Purchase History</h3>
-        <span class="sub">All purchase entries — India inventory inflows</span>
-      </div>
-      <div class="card-body" style="padding:0;">
-        <div style="overflow-x:auto;">
-          <table class="itable" id="inv-purchase-table">
-            <thead><tr>
-              <th>Date</th><th>State</th><th>Supplier</th><th>Product</th>
-              <th>HSN</th><th style="text-align:right;">Qty</th>
-              <th style="text-align:right;">Unit Cost ₹</th>
-              <th style="text-align:right;">Total ₹</th>
-              <th>Bill No.</th><th>Status</th><th></th>
-            </tr></thead>
-            <tbody id="inv-purchase-body">
-              <tr><td colspan="11" style="text-align:center;color:var(--ink3);padding:24px;">No purchase entries yet</td></tr>
-            </tbody>
-          </table>
+    <div class="card-body" style="padding:0;">
+      <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+        <input id="out-search" oninput="outgoingRender()"
+          style="width:320px;max-width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;">
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="outExportJson()">Export JSON</button>
+          <button class="btn btn-danger btn-sm" onclick="outClearAll()">Clear All</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- ── SALES ENTRIES ── -->
-  <div id="inv-panel-sales" style="display:none;padding-top:18px;">
-    <div class="card">
-      <div class="card-head">
-        <div class="sec-ic" style="background:#fef3c7;color:#92400e;">💰</div>
-        <h3>New Sales Entry</h3>
-        <span class="sub">Record payment received from buyer — removes stock from destination inventory</span>
-      </div>
-      <div class="card-body">
-        <div class="grid g3">
-          <div class="field">
-            <label>Sale Date</label>
-            <input type="date" id="inv-s-date">
-          </div>
-          <div class="field">
-            <label>Buyer Name</label>
-            <input type="text" id="inv-s-buyer" placeholder="Buyer / Customer name">
-          </div>
-          <div class="field">
-            <label>Country</label>
-            <input type="text" id="inv-s-country" placeholder="e.g. UAE, Kenya, Nepal">
-          </div>
-          <div class="field">
-            <label>Product / Model</label>
-            <input type="text" id="inv-s-product" placeholder="e.g. Samsung Galaxy A15">
-          </div>
-          <div class="field">
-            <label>Quantity (Pcs)</label>
-            <input type="number" id="inv-s-qty" min="1" placeholder="0">
-          </div>
-          <div class="field">
-            <label>Unit Price (USD)</label>
-            <input type="number" id="inv-s-price" step="0.01" placeholder="0.00">
-          </div>
-          <div class="field">
-            <label>Total Value (USD)</label>
-            <input type="number" id="inv-s-total" readonly style="background:var(--s2);color:var(--ink2);">
-          </div>
-          <div class="field">
-            <label>Invoice No.</label>
-            <input type="text" id="inv-s-invno" placeholder="Export invoice no.">
-          </div>
-          <div class="field">
-            <label>Payment Mode</label>
-            <select id="inv-s-paymode">
-              <option>TT / Wire Transfer</option>
-              <option>LC (Letter of Credit)</option>
-              <option>Cash</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Stock Source</label>
-            <select id="inv-s-source">
-              <option value="destination">Destination Country Stock</option>
-              <option value="india">India Stock (direct)</option>
-            </select>
-          </div>
-          <div class="field" style="grid-column:span 2;">
-            <label>Remarks</label>
-            <input type="text" id="inv-s-remarks" placeholder="Optional notes">
-          </div>
-        </div>
-        <div class="btn-row" style="margin-top:14px;">
-          <button class="btn btn-primary" onclick="invAddSale()">＋ Add Sale Entry</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <div class="sec-ic" style="background:#fef3c7;color:#92400e;">📋</div>
-        <h3>Sales History</h3>
-        <span class="sub">All sales — buyer payments received</span>
-      </div>
-      <div class="card-body" style="padding:0;">
-        <div style="overflow-x:auto;">
-          <table class="itable" id="inv-sales-table">
-            <thead><tr>
-              <th>Date</th><th>Buyer</th><th>Country</th><th>Product</th>
-              <th style="text-align:right;">Qty</th>
-              <th style="text-align:right;">Unit USD</th>
-              <th style="text-align:right;">Total USD</th>
-              <th>Invoice</th><th>Payment</th><th>Source</th><th></th>
-            </tr></thead>
-            <tbody id="inv-sales-body">
-              <tr><td colspan="11" style="text-align:center;color:var(--ink3);padding:24px;">No sales entries yet</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── STOCK VIEW ── -->
-  <div id="inv-panel-stock" style="display:none;padding-top:18px;">
-    <div class="card">
-      <div class="card-head">
-        <div class="sec-ic" style="background:#ede9fe;color:#6d28d9;">📊</div>
-        <h3>Stock View</h3>
-        <span class="sub">Current inventory across all locations</span>
-      </div>
-      <div class="card-body">
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-sm" onclick="invRenderStock('all')">All Locations</button>
-          <button class="btn btn-ghost btn-sm" onclick="invRenderStock('india')">India Only</button>
-          <button class="btn btn-ghost btn-sm" onclick="invRenderStock('export')">Export Countries</button>
-          <div style="flex:1;"></div>
-          <input type="text" id="inv-stock-search" placeholder="Search product…" oninput="invRenderStock('all')" style="width:200px;font-size:13px;">
-        </div>
-        <div id="inv-stock-content">
-          <div style="text-align:center;color:var(--ink3);padding:40px;">No inventory data yet. Add purchase entries and shipment transfers to build inventory.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SHIPMENT TRANSFER ── -->
-  <div id="inv-panel-transfer" style="display:none;padding-top:18px;">
-    <div class="card">
-      <div class="card-head">
-        <div class="sec-ic" style="background:#dbeafe;color:#1d4ed8;">✈️</div>
-        <h3>New Shipment Transfer</h3>
-        <span class="sub">Record a shipment — moves stock from India to destination country</span>
-      </div>
-      <div class="card-body">
-        <div class="grid g3">
-          <div class="field">
-            <label>Shipment Date</label>
-            <input type="date" id="inv-t-date">
-          </div>
-          <div class="field">
-            <label>From (India State)</label>
-            <select id="inv-t-from-state">
-              <option value="">Select State</option>
-              <option>Delhi</option><option>Maharashtra</option><option>Karnataka</option>
-              <option>Tamil Nadu</option><option>Gujarat</option><option>Telangana</option>
-              <option>West Bengal</option><option>Rajasthan</option><option>Uttar Pradesh</option>
-              <option>Haryana</option><option>Punjab</option><option>Other</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>To (Destination Country)</label>
-            <input type="text" id="inv-t-dest" placeholder="e.g. UAE, Kenya, Nepal">
-          </div>
-          <div class="field">
-            <label>Product / Model</label>
-            <input type="text" id="inv-t-product" placeholder="e.g. Samsung Galaxy A15">
-          </div>
-          <div class="field">
-            <label>Quantity (Pcs)</label>
-            <input type="number" id="inv-t-qty" min="1" placeholder="0">
-          </div>
-          <div class="field">
-            <label>Invoice No. (Export)</label>
-            <input type="text" id="inv-t-invno" placeholder="EX/25261300065">
-          </div>
-          <div class="field">
-            <label>AWB No.</label>
-            <input type="text" id="inv-t-awb" placeholder="e.g. 176-12345678">
-          </div>
-          <div class="field">
-            <label>Shipment Value (USD)</label>
-            <input type="number" id="inv-t-value" step="0.01" placeholder="0.00">
-          </div>
-          <div class="field">
-            <label>Status</label>
-            <select id="inv-t-status">
-              <option value="in-transit">In Transit</option>
-              <option value="delivered">Delivered — Awaiting Payment</option>
-              <option value="paid">Paid — Cleared</option>
-            </select>
-          </div>
-          <div class="field" style="grid-column:span 3;">
-            <label>Remarks</label>
-            <input type="text" id="inv-t-remarks" placeholder="Optional notes">
-          </div>
-        </div>
-        <div class="btn-row" style="margin-top:14px;">
-          <button class="btn btn-primary" onclick="invAddTransfer()">✈️ Record Shipment Transfer</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <div class="sec-ic" style="background:#dbeafe;color:#1d4ed8;">📋</div>
-        <h3>Shipment Transfer Log</h3>
-        <span class="sub">All transfers — India → export destinations</span>
-      </div>
-      <div class="card-body" style="padding:0;">
-        <div style="overflow-x:auto;">
-          <table class="itable" id="inv-transfer-table">
-            <thead><tr>
-              <th>Date</th><th>From (State)</th><th>To (Country)</th><th>Product</th>
-              <th style="text-align:right;">Qty</th>
-              <th style="text-align:right;">Value USD</th>
-              <th>Invoice</th><th>AWB</th><th>Status</th><th></th>
-            </tr></thead>
-            <tbody id="inv-transfer-body">
-              <tr><td colspan="10" style="text-align:center;color:var(--ink3);padding:24px;">No transfers recorded yet</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div id="outgoing-sheets" style="padding:14px;"></div>
     </div>
   </div>
 
@@ -1237,12 +1090,14 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="card-head"><div class="sec-ic">🔢</div><h3>Invoice Reference</h3></div>
       <div class="card-body">
         <div class="grid g3">
-          <div class="field"><label>Invoice Number *</label><input type="text" id="sinv-invno" placeholder="e.g. EX/25261300048"></div>
+          <div class="field"><label>Financial Year</label><select id="sinv-fy"><option>25-26</option><option>26-27</option><option>27-28</option></select></div>
+          <div class="field"><label>Shipment No.</label><input type="number" id="sinv-sno" value="" min="1"></div>
+          <div class="field"><label>Invoice No. (auto)</label><input type="text" id="sinv-invno" readonly></div>
           <div class="field"><label>Invoice Date</label><input type="date" id="sinv-date"></div>
           <div class="field"><label>Currency</label>
             <select id="sinv-currency" onchange="sinvRecalc()"><option value="USD">$ USD</option><option value="INR">₹ INR</option><option value="AED">AED</option><option value="EUR">€ EUR</option><option value="GBP">£ GBP</option></select>
           </div>
-          <div class="field"><label>PO Number</label><input type="text" id="sinv-pono" placeholder="e.g. EL/25-26/048"></div>
+          <div class="field"><label>PO No. (auto)</label><input type="text" id="sinv-pono" readonly></div>
           <div class="field"><label>PO Date</label><input type="date" id="sinv-podate"></div>
 
         </div>
@@ -1254,11 +1109,11 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="card-head"><div class="sec-ic">📦</div><h3>Consignee</h3><span class="sub">Shipping / logistics party</span></div>
       <div class="card-body">
         <div class="grid g3">
-          <div class="field" style="grid-column:span 2;"><label>Consignee Name</label><input type="text" id="sinv-cn-name" placeholder="e.g. CROWN LOGISTICS FZCO"></div>
-          <div class="field"><label>TRN / Tax ID</label><input type="text" id="sinv-cn-trn" placeholder="TRN number"></div>
-          <div class="field" style="grid-column:span 2;"><label>Address Line 1</label><input type="text" id="sinv-cn-addr" placeholder="Building / Zone / Street"></div>
-          <div class="field"><label>Address Line 2</label><input type="text" id="sinv-cn-addr2" placeholder="City, Country / PO Box"></div>
-          <div class="field"><label>Contact No.</label><input type="text" id="sinv-cn-phone" placeholder="+971 XXXXXXXX"></div>
+          <div class="field" style="grid-column:span 2;"><label>Consignee Name</label><input type="text" id="sinv-cn-name"></div>
+          <div class="field"><label>TRN / Tax ID</label><input type="text" id="sinv-cn-trn"></div>
+          <div class="field" style="grid-column:span 2;"><label>Address Line 1</label><input type="text" id="sinv-cn-addr"></div>
+          <div class="field"><label>Address Line 2</label><input type="text" id="sinv-cn-addr2"></div>
+          <div class="field"><label>Contact No.</label><input type="text" id="sinv-cn-phone"></div>
         </div>
       </div>
     </div>
@@ -1268,11 +1123,9 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="card-head"><div class="sec-ic">🏢</div><h3>Buyer / Customer *</h3><span class="sub">If different from consignee</span></div>
       <div class="card-body">
         <div class="grid g3">
-          <div class="field" style="grid-column:span 2;"><label>Buyer Name *</label><input type="text" id="sinv-cust-name" placeholder="e.g. AMICO TELEZONE FZCO"></div>
-          <div class="field"><label>TRN / Tax ID</label><input type="text" id="sinv-cust-gst" placeholder="TRN / GSTIN"></div>
-          <div class="field" style="grid-column:span 2;"><label>Address Line 1</label><input type="text" id="sinv-cust-addr" placeholder="Building / Zone / Street"></div>
-          <div class="field"><label>Address Line 2</label><input type="text" id="sinv-cust-addr2" placeholder="City, Country / PO Box"></div>
-          <div class="field"><label>Contact No.</label><input type="text" id="sinv-cust-phone" placeholder="+971 XXXXXXXX"></div>
+          <div class="field" style="grid-column:span 2;"><label>Buyer Name *</label><input type="text" id="sinv-cust-name"></div>
+          <div class="field" style="grid-column:span 2;"><label>Address Line 1</label><input type="text" id="sinv-cust-addr"></div>
+          <div class="field"><label>Address Line 2</label><input type="text" id="sinv-cust-addr2"></div>
           <div class="field"><label>Payment Terms</label>
             <select id="sinv-terms"><option>After Inspection</option><option>Due on Receipt</option><option>Net 15</option><option>Net 30</option><option>Net 45</option><option>Net 60</option></select>
           </div>
@@ -1285,13 +1138,13 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
       <div class="card-head"><div class="sec-ic">✈️</div><h3>Shipment Route</h3></div>
       <div class="card-body">
         <div class="grid g3">
-          <div class="field"><label>Mode of Shipment</label><input type="text" id="sinv-mode" placeholder="BY AIR" value="BY AIR"></div>
-          <div class="field"><label>Port of Loading</label><input type="text" id="sinv-pol" placeholder="NEW DELHI" value="NEW DELHI"></div>
-          <div class="field"><label>Port of Discharge</label><input type="text" id="sinv-pod" placeholder="DUBAI (U.A.E.)"></div>
-          <div class="field"><label>Final Destination</label><input type="text" id="sinv-dest" placeholder="DUBAI (U.A.E.)"></div>
-          <div class="field"><label>Delivery Term</label><input type="text" id="sinv-dterm" placeholder="CIF, Dubai" value="CIF, Dubai"></div>
-          <div class="field"><label>Per-Carriage By</label><input type="text" id="sinv-pcar" placeholder="N/A" value="N/A"></div>
-          <div class="field"><label>Remarks / Notes</label><input type="text" id="sinv-notes" placeholder="e.g. # All standard accessories as original pack"></div>
+          <div class="field"><label>Mode of Shipment</label><input type="text" id="sinv-mode" value=""></div>
+          <div class="field"><label>Port of Loading</label><input type="text" id="sinv-pol" value=""></div>
+          <div class="field"><label>Port of Discharge</label><input type="text" id="sinv-pod" value=""></div>
+          <div class="field"><label>Final Destination</label><input type="text" id="sinv-dest" value=""></div>
+          <div class="field"><label>Delivery Term</label><input type="text" id="sinv-dterm" value=""></div>
+          <div class="field"><label>Per-Carriage By</label><input type="text" id="sinv-pcar" value=""></div>
+          <div class="field"><label>Remarks / Notes</label><input type="text" id="sinv-notes" value=""></div>
         </div>
       </div>
     </div>
@@ -1343,18 +1196,21 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
   <!-- INVOICE LIST -->
   <div id="sinv-panel-list" style="display:none;padding-top:18px;">
     <div class="card">
-      <div class="card-head"><div class="sec-ic">📋</div><h3>Saved Invoices</h3></div>
+      <div class="card-head"><div class="sec-ic">📋</div><h3>Saved Invoices</h3><span class="sub">View, manage, and mark invoices as paid</span></div>
       <div class="card-body" style="padding:0;">
-        <div style="overflow-x:auto;">
-          <table class="itable">
-            <thead><tr>
-              <th>Invoice No.</th><th>Customer</th><th>Date</th><th>Due Date</th>
-              <th style="text-align:right;">Amount</th><th>Status</th><th></th>
-            </tr></thead>
-            <tbody id="sinv-list-body">
-              <tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:24px;">No invoices saved yet.</td></tr>
-            </tbody>
-          </table>
+        <div class="sinv-list-wrap">
+          <div class="sinv-list-head">
+            <div>Invoice No.</div>
+            <div>Customer</div>
+            <div>Date</div>
+            <div>Consignee</div>
+            <div class="nr">Amount</div>
+            <div>Status</div>
+            <div class="nr">Actions</div>
+          </div>
+          <div id="sinv-list-body" class="sinv-list-body">
+            <div class="sinv-list-empty">No invoices saved yet. Generate one from the New Invoice tab.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1427,6 +1283,7 @@ const KEY_CONSIGNEE='logica_consignee_memory';
 const KEY_SHIPMENTS='logica_shipments';
 const KEY_SETTINGS='logica_settings';
 const KEY_TRACKER='logica_tracker';
+const KEY_OUTGOING='logica_outgoing_inventory';
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
@@ -1450,7 +1307,7 @@ function sinvAddItem(){
 
   // Description cell with autocomplete
   const descTd = document.createElement('td');
-  const descWrap = descMakeInput('Description of goods', (inp, hsn) => {
+  const descWrap = descMakeInput('', (inp, hsn) => {
     const hsnInp = tr.querySelector('input[data-sinv-hsn]');
     if(hsnInp && hsn) hsnInp.value = hsn;
     inp._currentHsn = hsn||'';
@@ -1461,9 +1318,9 @@ function sinvAddItem(){
 
   const rest = document.createElement('template');
   rest.innerHTML =
-    '<td><input type="text" data-sinv-hsn value="" placeholder="HSN Code" style="width:100%;"></td>'+
-    '<td><input type="number" value="1" min="1" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
-    '<td><input type="number" value="" min="0" placeholder="0.00" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
+    '<td><input type="text" data-sinv-hsn value="" style="width:100%;"></td>'+
+    '<td><input type="number" value="" min="1" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
+    '<td><input type="number" value="" min="0" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
     '<td><input type="number" value="" readonly style="width:100%;text-align:right;background:var(--s2);"></td>'+
     '<td><button class="ic-btn" onclick="this.closest(\'tr\').remove();sinvRecalc();">✕</button></td>';
   tr.appendChild(descTd);
@@ -1552,8 +1409,6 @@ function sinvGenerateInvoice(){
   const cnPhone  = document.getElementById('sinv-cn-phone')?.value.trim() || '';
   const custAddr = document.getElementById('sinv-cust-addr')?.value.trim() || '';
   const custAddr2= document.getElementById('sinv-cust-addr2')?.value.trim() || '';
-  const custTrn  = document.getElementById('sinv-cust-gst')?.value.trim() || '';
-  const custPhone= document.getElementById('sinv-cust-phone')?.value.trim() || '';
 
   // Logica address from settings
   const ex    = getEx();
@@ -1611,8 +1466,6 @@ function sinvGenerateInvoice(){
         `<div style="font-weight:bold;font-size:11px;">${escH(custName)}</div>`+
         (custAddr ?`<div style="font-size:10px;">${escH(custAddr)}</div>`:'')+
         (custAddr2?`<div style="font-size:10px;">${escH(custAddr2)}</div>`:'')+
-        (custTrn  ?`<div style="font-size:10px;">TRN: ${escH(custTrn)}</div>`:'')+
-        (custPhone?`<div style="font-size:10px;">CON.NO. ${escH(custPhone)}</div>`:'')+
       `</td>`+
     `</tr></table>`+
 
@@ -1688,6 +1541,9 @@ function sinvGenerateInvoice(){
   document.getElementById('sinv-doc-body').innerHTML = doc;
   document.getElementById('sinv-preview-wrap').style.display = 'block';
   document.getElementById('sinv-preview-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+
+  // Auto-save every generated invoice into Invoice List (silent upsert)
+  try{ sinvUpsertSavedInvoice({toast:false}); }catch(e){}
 }
 
 
@@ -1756,18 +1612,52 @@ function sinvPrint(){
 
 
 function sinvSaveInvoice(){
+  return sinvUpsertSavedInvoice({toast:true});
+}
+
+function sinvUpsertSavedInvoice(opts){
+  const o = opts || {};
   const custName = document.getElementById('sinv-cust-name')?.value.trim();
   const invNo    = document.getElementById('sinv-invno')?.value.trim() || ('SI-'+Date.now());
   const invDate  = document.getElementById('sinv-date')?.value || '';
-  const dueDate  = document.getElementById('sinv-due')?.value  || '';
+  const consignee= document.getElementById('sinv-cn-name')?.value.trim() || '';
+  const dest     = (document.getElementById('sinv-dest')?.value || '').trim();
   const total    = document.getElementById('sinv-total')?.textContent || '—';
-  if(!custName){ alert('Enter a customer name before saving.'); return; }
+  if(!custName){ alert('Enter a customer name before saving.'); return false; }
+  const html = document.getElementById('sinv-doc-body')?.innerHTML||'';
+  if(!html.trim()){ alert('Generate an invoice first.'); return false; }
+
+  // Capture items for stock release (description + qty)
+  const items = [];
+  document.querySelectorAll('#sinv-items-body tr').forEach(tr=>{
+    const ins = tr.querySelectorAll('input');
+    const desc = ins[0]?.value.trim();
+    const qty  = +ins[2]?.value || 0; // [0]=desc, [1]=hsn, [2]=qty
+    if(desc && qty>0) items.push({product: desc, qty});
+  });
+
   const saved = JSON.parse(localStorage.getItem('sinv_invoices')||'[]');
-  saved.unshift({id:Date.now(), invNo, custName, invDate, dueDate, total, status:'Unpaid',
-                 html: document.getElementById('sinv-doc-body')?.innerHTML||''});
+  const existingIdx = saved.findIndex(x => (x.invNo||'') === invNo);
+  const prev = existingIdx >= 0 ? saved[existingIdx] : null;
+  const entry = {
+    id: prev?.id || Date.now(),
+    invNo,
+    custName,
+    invDate,
+    consignee,
+    dest,
+    items,
+    total,
+    paid: prev?.paid ?? false,
+    status: (prev?.paid ?? false) ? 'Paid' : 'Unpaid',
+    html
+  };
+  if(existingIdx >= 0) saved.splice(existingIdx, 1);
+  saved.unshift(entry);
   localStorage.setItem('sinv_invoices', JSON.stringify(saved));
-  alert('Invoice saved!');
+  if(o.toast) alert('Invoice saved!');
   sinvRenderList();
+  return true;
 }
 
 function sinvRenderList(){
@@ -1775,22 +1665,58 @@ function sinvRenderList(){
   if(!tbody) return;
   const saved = JSON.parse(localStorage.getItem('sinv_invoices')||'[]');
   if(!saved.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:24px;">No invoices saved yet. Generate one from the New Invoice tab.</td></tr>';
+    tbody.innerHTML = '<div class="sinv-list-empty">No invoices saved yet. Generate one from the New Invoice tab.</div>';
     return;
   }
-  tbody.innerHTML = saved.map((inv,i)=>
-    '<tr>'+
-    '<td style="font-weight:600;">'+escH(inv.invNo)+'</td>'+
-    '<td>'+escH(inv.custName)+'</td>'+
-    '<td>'+fmtD(inv.invDate)+'</td>'+
-    '<td>'+fmtD(inv.dueDate)+'</td>'+
-    '<td style="text-align:right;font-weight:600;">'+escH(inv.total)+'</td>'+
-    '<td><span class="badge" style="background:var(--amber-l);color:var(--amber);">'+escH(inv.status)+'</span></td>'+
-    '<td style="display:flex;gap:6px;">'+
-      '<button class="btn btn-ghost btn-sm" onclick="sinvViewInvoice('+i+')">View</button>'+
-      '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="sinvDeleteInvoice('+i+')">Delete</button>'+
-    '</td></tr>'
-  ).join('');
+  // Backward-compat: migrate older saved invoices (dueDate/status) to new fields
+  let mutated=false;
+  saved.forEach(inv=>{
+    if(inv && inv.paid === undefined){
+      inv.paid = (String(inv.status||'').toLowerCase()==='paid');
+      mutated=true;
+    }
+    if(inv && inv.consignee === undefined){
+      inv.consignee = inv.consignee || '';
+      mutated=true;
+    }
+  });
+  if(mutated) try{ localStorage.setItem('sinv_invoices', JSON.stringify(saved)); }catch(e){}
+
+  tbody.innerHTML = saved.map((inv,i)=>{
+    const paid = !!inv.paid;
+    const lbl = paid ? 'Paid' : 'Unpaid';
+    const paidAttr = paid ? 'true' : 'false';
+    return (
+      '<div class="sinv-row">'+
+        '<div class="sinv-cell sinv-invno" title="'+escH(inv.invNo)+'">'+escH(inv.invNo)+'</div>'+
+        '<div class="sinv-cell" title="'+escH(inv.custName)+'">'+escH(inv.custName)+'</div>'+
+        '<div class="sinv-cell sinv-muted">'+fmtD(inv.invDate)+'</div>'+
+        '<div class="sinv-cell" title="'+escH(inv.consignee||'')+'">'+escH(inv.consignee||'')+'</div>'+
+        '<div class="sinv-cell nr" style="font-weight:800;">'+escH(inv.total)+'</div>'+
+        '<div class="sinv-cell">'+
+          '<span class="sinv-pay-toggle" data-paid="'+paidAttr+'" onclick="sinvTogglePaid('+i+')" title="Toggle paid/unpaid">'+
+            '<span class="sinv-pay-text">'+lbl+'</span>'+
+          '</span>'+
+        '</div>'+
+        '<div class="sinv-actions">'+
+          '<button class="btn btn-ghost btn-sm" onclick="sinvViewInvoice('+i+')">View</button>'+
+          '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="sinvDeleteInvoice('+i+')">Delete</button>'+
+        '</div>'+
+      '</div>'
+    );
+  }).join('');
+}
+
+function sinvTogglePaid(i){
+  const saved = JSON.parse(localStorage.getItem('sinv_invoices')||'[]');
+  if(!saved[i]) return;
+  saved[i].paid = !saved[i].paid;
+  // Keep legacy status in sync if present
+  saved[i].status = saved[i].paid ? 'Paid' : 'Unpaid';
+  localStorage.setItem('sinv_invoices', JSON.stringify(saved));
+  sinvRenderList();
+  // Update outgoing inventory net stock immediately
+  try{ outgoingRender(); }catch(e){}
 }
 
 function sinvViewInvoice(i){
@@ -1811,8 +1737,8 @@ function sinvDeleteInvoice(i){
 }
 
 function sinvClear(){
-  ['sinv-invno','sinv-pono','sinv-podate','sinv-due','sinv-notes',
-   'sinv-cust-name','sinv-cust-addr','sinv-cust-addr2','sinv-cust-gst','sinv-cust-phone',
+  ['sinv-invno','sinv-pono','sinv-podate','sinv-notes',
+   'sinv-cust-name','sinv-cust-addr','sinv-cust-addr2',
    'sinv-cn-name','sinv-cn-addr','sinv-cn-addr2','sinv-cn-trn','sinv-cn-phone'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
@@ -1892,7 +1818,7 @@ function descMakeInput(placeholder, onSelectCb){
   wrap.style.cssText = 'position:relative;width:100%;display:block;';
   const inp = document.createElement('input');
   inp.type = 'text';
-  inp.placeholder = placeholder||'Description of goods';
+  inp.placeholder = placeholder || '';
   inp.style.width = '100%';
   inp.autocomplete = 'off';
 
@@ -2085,6 +2011,144 @@ function buyerSaveFromForm(idx){
   LS.set(KEY_BUYERS, buyers);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// OUTGOING INVENTORY (destination stock sheets)
+// ═══════════════════════════════════════════════════════════════
+function outLoad(){ return LS.get(KEY_OUTGOING, []); }
+function outSave(rows){ LS.set(KEY_OUTGOING, rows||[]); }
+
+function outUpsertShipment(sh){
+  if(!sh || !sh.invNo) return;
+  const rows = outLoad();
+  const i = rows.findIndex(x => x.invNo === sh.invNo);
+  if(i >= 0){
+    rows[i] = { ...rows[i], ...sh, updatedAt: new Date().toISOString() };
+  }else{
+    rows.unshift({ ...sh, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  }
+  outSave(rows);
+}
+
+function outUpsertFromCommercialInvoice(sd){
+  if(!sd || !sd.ino || !sd.dest || !sd.items || !sd.items.length) return;
+  const ship = {
+    invNo: sd.ino,
+    date: sd.idate || new Date().toISOString().split('T')[0],
+    dest: sd.dest,
+    items: sd.items.map(it => ({
+      product: (it.desc||'').trim(),
+      qty: +it.qty || 0
+    })).filter(x => x.product && x.qty > 0)
+  };
+  if(!ship.items.length) return;
+  outUpsertShipment(ship);
+}
+
+function outClearAll(){
+  if(!confirm('Clear all outgoing inventory records?')) return;
+  outSave([]);
+  outgoingRender();
+}
+
+function outExportJson(){
+  const rows = outLoad();
+  const blob = new Blob([JSON.stringify(rows,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'outgoing_inventory.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+function outgoingRender(){
+  const wrap = document.getElementById('outgoing-sheets');
+  if(!wrap) return;
+  const q = (document.getElementById('out-search')?.value||'').trim().toLowerCase();
+  const rows = outLoad();
+  if(!rows.length){
+    wrap.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:40px;">No outgoing shipments yet. Generate a Commercial Invoice in Shipment Lodging to build destination stock sheets.</div>';
+    return;
+  }
+
+  const norm = s => String(s||'').trim().toLowerCase();
+
+  // Aggregate shipped (Commercial Invoices) per destination → product totals
+  const destMap = new Map(); // normDest -> {label, prodMap: Map(normProd -> {label, qty})}
+  rows.forEach(r=>{
+    const destLabel = (r.dest||'—').trim() || '—';
+    const destKey = norm(destLabel) || '—';
+    if(!destMap.has(destKey)) destMap.set(destKey, {label: destLabel, prodMap: new Map()});
+    const entry = destMap.get(destKey);
+    (r.items||[]).forEach(it=>{
+      const pLabel = (it.product||'').trim();
+      const pKey = norm(pLabel);
+      const qty = +it.qty || 0;
+      if(!pKey || qty<=0) return;
+      if(!entry.prodMap.has(pKey)) entry.prodMap.set(pKey, {label: pLabel, qty: 0});
+      entry.prodMap.get(pKey).qty += qty;
+    });
+  });
+
+  // Subtract paid sales invoices (Stock release)
+  let sinv = [];
+  try{ sinv = JSON.parse(localStorage.getItem('sinv_invoices')||'[]'); }catch(e){ sinv=[]; }
+  sinv.filter(x=>x && x.paid).forEach(inv=>{
+    const destLabel = (inv.dest||'').trim();
+    const destKey = norm(destLabel);
+    if(!destKey || !destMap.has(destKey)) return;
+    const entry = destMap.get(destKey);
+    (inv.items||[]).forEach(it=>{
+      const pLabel = (it.product||it.desc||'').trim();
+      const pKey = norm(pLabel);
+      const qty = +it.qty || 0;
+      if(!pKey || qty<=0) return;
+      if(!entry.prodMap.has(pKey)) entry.prodMap.set(pKey, {label: pLabel, qty: 0});
+      entry.prodMap.get(pKey).qty -= qty;
+    });
+  });
+
+  // Render destination cards
+  const dests = [...destMap.keys()].sort((a,b)=>a.localeCompare(b));
+  const cards = [];
+  dests.forEach(destKey=>{
+    const entry = destMap.get(destKey);
+    const dest = entry.label;
+    const products = [...entry.prodMap.values()]
+      .filter(p=>p.qty !== 0) // hide zeros
+      .map(p=>({product:p.label, qty:p.qty}))
+      .sort((a,b)=>b.qty-a.qty);
+
+    const matches = !q || dest.toLowerCase().includes(q) || products.some(p=>p.product.toLowerCase().includes(q));
+    if(!matches) return;
+
+    const totalQty = products.reduce((s,p)=>s+p.qty,0);
+    cards.push(`
+      <div style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px;background:#fff;">
+        <div style="background:var(--accent-l);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div style="font-weight:800;color:var(--accent);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(dest)}</div>
+          <div style="font-size:12px;color:var(--ink2);"><strong>${fN(totalQty)}</strong> pcs (net)</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="itable" style="margin:0;">
+            <thead><tr><th>Product</th><th style="text-align:right;width:120px;">Qty (Pcs)</th></tr></thead>
+            <tbody>
+              ${products.map(p=>`
+                <tr>
+                  <td style="font-weight:600;">${escH(p.product)}</td>
+                  <td style="text-align:right;font-weight:800;color:${p.qty<0?'var(--red)':'var(--ink)'};">${fN(p.qty)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `);
+  });
+  wrap.innerHTML = cards.length ? cards.join('') : '<div style="text-align:center;color:var(--ink3);padding:40px;">No matches.</div>';
+}
+
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -2229,7 +2293,7 @@ window.onload=()=>{
   const p=new Date(t);p.setDate(p.getDate()-20);
   document.getElementById('pdate').value=fmt(p);
   updateRef();
-  addItem(true);
+  addItem();
   addPackRow(true);
   addBuyer();
   updateSidebarBadges();
@@ -2253,7 +2317,8 @@ window.onload=()=>{
         document.getElementById('ctrn').value = b.trn || '';
         document.getElementById('cc').value = b.contact || '';
         document.getElementById('ccy').value = b.country || '';
-        document.getElementById('pcar').value = b.pcar || '';
+        // Always default per-carriage to N/A when selecting consignee.
+        document.getElementById('pcar').value = 'N/A';
       }
     );
   }
@@ -2264,23 +2329,23 @@ window.onload=()=>{
       el.addEventListener('blur', () => consigneeSaveFromForm());
     }
   });
-  if(_descMemory.length===0){
-    [{desc:'MAC BOOK AIR M4 16/256GB (MW123HN/A) Made in CHINA (NON ACTIVATED)',hsn:'84713010'},
-     {desc:'I PHONE 17 256GB BLACK MADE IN CHINA (NON ACTIVATED)',hsn:'85171300'},
-     {desc:'I PHONE 17 256GB WHITE MADE IN CHINA (NON ACTIVATED)',hsn:'85171300'},
-     {desc:'SAMSUNG GALAXY S25 128GB BLACK MADE IN INDIA (NON ACTIVATED)',hsn:'85171300'}
-    ].forEach(d=>_descMemory.push(d));
-  }
   updateDatalist();
   invLoad();
   invRender();
   sinvAddItem();
   sinvRenderList();
+  // Default Sales Invoicing FY + Shipment No from main reference
+  try{
+    const fy = document.getElementById('fy')?.value;
+    const sno = document.getElementById('sno')?.value;
+    if(fy && document.getElementById('sinv-fy')) document.getElementById('sinv-fy').value = fy;
+    if(sno && document.getElementById('sinv-sno')) document.getElementById('sinv-sno').value = sno;
+  }catch(e){}
+  sinvUpdateRef();
   // Set today's date on inventory forms
   const todayStr = new Date().toISOString().split('T')[0];
-  ['inv-p-date','inv-s-date','inv-t-date'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value=todayStr;
-  });
+  // Initial render of outgoing inventory sheets
+  try{ outgoingRender(); }catch(e){}
 
   // Lock tabs on any change to the entry form (delegated listener)
   const formPanel = document.getElementById('ipanel-form');
@@ -2288,6 +2353,7 @@ window.onload=()=>{
     formPanel.addEventListener('input', ()=>lockTabs(), {passive:true});
     formPanel.addEventListener('change', ()=>lockTabs(), {passive:true});
   }
+  initSelectPlaceholders();
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -2298,7 +2364,7 @@ function switchTab(name){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  const titles={invoice:'Shipment Lodging',salesinv:'Sales Invoicing',inventory:'Inventory Management',settings:'Company Settings'};
+  const titles={invoice:'Shipment Lodging',salesinv:'Sales Invoicing',inventory:'Outgoing Inventory',settings:'Company Settings'};
   document.getElementById('tb-title').textContent=titles[name]||name;
   document.getElementById('tb-sub').textContent='';
 
@@ -2306,6 +2372,7 @@ function switchTab(name){
   if(name==='invoice'){ta.style.display='';ta.textContent='⚡ Generate Documents';ta.onclick=generateAll;}
   else{ta.style.display='none';}
   document.getElementById('inv-badge').style.display=name==='invoice'?'':'none';
+  if(name==='inventory') setTimeout(()=>{ try{ outgoingRender(); }catch(e){} }, 0);
 }
 
 function lockTabs(){
@@ -2368,13 +2435,74 @@ function switchITab(t){
 // ═══════════════════════════════════════════════════════════════
 ['fy','sno'].forEach(id=>document.getElementById(id).addEventListener('input',updateRef));
 function updateRef(){
-  const yr=g('fy'),no=g('sno').padStart(3,'0');
-  const rawNo=g('sno');const invNo=`EX/${yr.replace('-','')}13000${rawNo}`;
+  const yr = g('fy');
+  const rawNo = g('sno');
+  const b=document.getElementById('inv-badge');
+  if(!yr || !rawNo){
+    document.getElementById('ino').value = '';
+    document.getElementById('pno').value = '';
+    if(b){
+      b.textContent = '';
+      b.style.display = 'none';
+    }
+    return;
+  }
+  const no = rawNo.padStart(3,'0');
+  const invNo=`EX/${yr.replace('-','')}13000${rawNo}`;
   document.getElementById('ino').value=invNo;
   document.getElementById('pno').value=`EL/${yr}/${no}`;
-  const b=document.getElementById('inv-badge');
-  b.textContent=invNo;
-  b.style.display='';
+  if(b){
+    b.textContent=invNo;
+    b.style.display='';
+  }
+}
+
+// Sales Invoicing reference numbers (same scheme as Shipment Lodging)
+['sinv-fy','sinv-sno'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('input', sinvUpdateRef);
+});
+function sinvUpdateRef(){
+  const yr = g('sinv-fy');
+  const rawNo = (g('sinv-sno')||'').trim();
+  const invEl = document.getElementById('sinv-invno');
+  const poEl  = document.getElementById('sinv-pono');
+  if(!yr || !rawNo){
+    if(invEl) invEl.value = '';
+    if(poEl)  poEl.value  = '';
+    return;
+  }
+  const no = rawNo.padStart(3,'0');
+  const invNo = `EX/${yr.replace('-','')}13000${rawNo}`;
+  if(invEl) invEl.value = invNo;
+  if(poEl)  poEl.value  = `EL/${yr}/${no}`;
+}
+
+function initSelectPlaceholders(){
+  const selects = Array.from(document.querySelectorAll('select'));
+  selects.forEach(sel=>{
+    if(!sel) return;
+    const opts = Array.from(sel.options || []);
+    const ph = opts.find(o=>o && o.value==='' && o.textContent.trim().toLowerCase()==='select');
+    const placeholderOption = ph || (() => {
+      const x = document.createElement('option');
+      x.value = '';
+      x.textContent = 'Select';
+      // Important: keep enabled so browsers allow selecting it programmatically.
+      x.disabled = false;
+      sel.insertBefore(x, sel.firstChild);
+      return x;
+    })();
+
+    placeholderOption.disabled = false;
+
+    // Force placeholder selection on load
+    sel.value = placeholderOption.value;
+    sel.style.color = 'var(--ink4)';
+    sel.addEventListener('change', ()=>{
+      sel.style.color = sel.value ? '' : 'var(--ink4)';
+    });
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2396,15 +2524,15 @@ function setRate(rate,source,date){
   const hint=document.getElementById('xrate-hint');
   const btn=document.getElementById('xrate-btn');
   if(hint) hint.innerHTML=`Rate: &#8377;${rate}/USD (${source}${date?' as of '+date:''}) &nbsp;&mdash;&nbsp; <a href="https://www.dgft.gov.in/CP/?opt=currency-list-exchange-rates" target="_blank" style="color:var(--accent);">View DGFT &#8599;</a>`;
-  if(btn){btn.textContent='Refresh';btn.disabled=false;}
+  if(btn){btn.textContent='Check Rate';btn.disabled=false;}
 }
 
 // ═══════════════════════════════════════════════════════════════
 // BUYERS (Entry Form)
 // ═══════════════════════════════════════════════════════════════
 const BPRE=[
-  {n:'CROWN LOGISTICS FZCO',a1:'G-12 Warehouse, Dubai Airport Free Zone',a2:'Po Box: 54620 Dubai, U.A.E.',trn:'100433151600003',con:'+97142386222',cy:'U.A.E.',pay:'After Inspection',sfx:''},
-  {n:'',a1:'',a2:'',trn:'',con:'',cy:'U.A.E.',pay:'ADVANCE',sfx:'A'},
+  {n:'',a1:'',a2:'',trn:'',con:'',cy:'',pay:'',sfx:''},
+  {n:'',a1:'',a2:'',trn:'',con:'',cy:'',pay:'',sfx:''},
 ];
 
 function addBuyer(preset){
@@ -2423,14 +2551,13 @@ function addBuyer(preset){
   pane.className='bpane'+(idx===0?' active':'');
   pane.id=`bp-${idx}`;
   pane.innerHTML=`<div class="grid g3" style="margin-bottom:12px;">
-    <div class="field" style="grid-column:1/3"><label>Buyer Company Name *</label><input id="b${idx}-n" value="${pre.n||''}" placeholder="Company name"></div>
-    <div class="field"><label>Invoice Suffix (e.g. A, B)</label><input id="b${idx}-s" value="${sfx}" placeholder="Blank = main invoice" style="max-width:130px"></div>
+    <div class="field" style="grid-column:1/3"><label>Buyer Company Name *</label><input id="b${idx}-n" value="${pre.n||''}"></div>
     <div class="field"><label>Address Line 1</label><input id="b${idx}-a1" value="${pre.a1||''}"></div>
     <div class="field"><label>Address Line 2</label><input id="b${idx}-a2" value="${pre.a2||''}"></div>
     <div class="field"><label>TRN / Tax ID</label><input id="b${idx}-trn" value="${pre.trn||''}"></div>
     <div class="field"><label>Contact No.</label><input id="b${idx}-con" value="${pre.con||''}"></div>
-    <div class="field"><label>Country</label><input id="b${idx}-cy" value="${pre.cy||'U.A.E.'}"></div>
-    <div class="field"><label>Payment Terms (overrides global)</label><input id="b${idx}-pay" value="${pre.pay||'After Inspection'}"></div>
+    <div class="field"><label>Country</label><input id="b${idx}-cy"></div>
+    <div class="field"><label>Payment Terms (overrides global)</label><input id="b${idx}-pay" value="${pre.pay||''}"></div>
   </div>
   ${idx>0?`<button class="btn btn-danger btn-sm" onclick="remBuyer(${idx})">Remove</button>`:''}`;
   panes.appendChild(pane);
@@ -2455,8 +2582,9 @@ function addBuyer(preset){
         document.getElementById(`b${idx}-a2`).value = b.addr2 || '';
         document.getElementById(`b${idx}-trn`).value = b.trn || '';
         document.getElementById(`b${idx}-con`).value = b.contact || '';
-        document.getElementById(`b${idx}-cy`).value  = b.country || 'U.A.E.';
-        document.getElementById(`b${idx}-pay`).value = b.payterm || 'After Inspection';
+        // Country is not prefilled (user enters when required).
+        document.getElementById(`b${idx}-cy`).value  = '';
+        document.getElementById(`b${idx}-pay`).value = b.payterm || '';
       }
     );
 
@@ -2505,7 +2633,7 @@ function openBuyerPickerForEntry(){
       <button class="modal-close" onclick="document.getElementById('buyer-picker-modal').remove()">×</button>
     </div>
     <div class="modal-body" style="padding:12px 16px;">
-      <input placeholder="🔍 Search buyers…" oninput="filterBuyerPicker(this.value)"
+      <input oninput="filterBuyerPicker(this.value)"
         style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;outline:none;margin-bottom:10px;">
       <div id="buyer-picker-list" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
         ${buyers.map((b,i)=>`
@@ -2545,33 +2673,32 @@ function pickBuyerForEntry(i){
 // ═══════════════════════════════════════════════════════════════
 // LINE ITEMS
 // ═══════════════════════════════════════════════════════════════
-function addItem(pf){
+function addItem(){
   const tr = document.createElement('tr');
 
   // Description cell with autocomplete
   const descTd = document.createElement('td');
-  const descWrap = descMakeInput('Description of goods', (inp, hsn) => {
-    const hsnInp = tr.querySelector('input[placeholder="HSN Code"]');
+  const descWrap = descMakeInput('', (inp, hsn) => {
+    const hsnInp = tr.querySelector('input[data-ship-hsn]');
     if(hsnInp && hsn) hsnInp.value = hsn;
     rcRow(tr.querySelectorAll('input[type=number]')[0]);
   });
-  if(pf) descWrap._input.value = 'MAC BOOK AIR M4 16/256GB (MW123HN/A) Made in CHINA (NON ACTIVATED)';
   descTd.appendChild(descWrap);
 
   // Remaining cells
   const rest = document.createElement('template');
   rest.innerHTML =
-    `<td><input type="text" value="${pf?'84713010':''}" placeholder="HSN Code"></td>`+
-    `<td><input type="number" value="${pf?200:''}" placeholder="0" min="1" oninput="rcRow(this)"></td>`+
-    `<td><input type="number" value="${pf?845:''}" placeholder="0.00" step="0.01" oninput="rcRow(this)"></td>`+
-    `<td><input type="number" readonly value="${pf?169000:''}"></td>`+
+    `<td><input type="text" data-ship-hsn value=""></td>`+
+    `<td><input type="number" value="" min="1" oninput="rcRow(this)"></td>`+
+    `<td><input type="number" value="" step="0.01" oninput="rcRow(this)"></td>`+
+    `<td><input type="number" readonly value=""></td>`+
     `<td><input type="number" readonly value=""></td>`+
     `<td><button class="ic-btn" onclick="this.closest('tr').remove();updatePlTotal();" title="Remove row">✕</button></td>`;
   tr.appendChild(descTd);
   rest.content.childNodes.forEach(n => tr.appendChild(n.cloneNode(true)));
 
   document.getElementById('ibody').appendChild(tr);
-  const hsnInp = tr.querySelector('input[placeholder="HSN Code"]');
+  const hsnInp = tr.querySelector('input[data-ship-hsn]');
   if(hsnInp){
     hsnInp.addEventListener('blur', ()=>{
       const desc = descWrap._input.value.trim();
@@ -2579,7 +2706,6 @@ function addItem(pf){
       if(desc && hsn) descSave(desc, hsn);
     });
   }
-  if(pf) rcRow(tr.querySelectorAll('input[type=number]')[0]);
 }
 
 function rcRow(el){
@@ -2649,6 +2775,8 @@ function generateAll(){
       packBoxes:getImeiByBox(),
       packListEntries:packListEntries,
     };
+    // Outgoing Inventory: pull destination + shipped items from Commercial Invoice generation
+    try{ outUpsertFromCommercialInvoice(SD); }catch(e){}
     buildBuyerPills();
     activeBuyer=0;activeDoc='ci';
     selDoc('ci');
@@ -2964,7 +3092,7 @@ function rPO(d){
       <div style="min-height:90px;"></div>
     </div>
 
-    ${coFoot(d)}`;
+    `;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3184,8 +3312,8 @@ function renderTracker(){
   tbody.innerHTML=tracker.map((t,i)=>`<tr>
     <td><span class="badge b-blue">${t.ino}</span></td>
     <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.buyer||'—'}</td>
-    <td><input value="${t.awb||''}" placeholder="Enter AWB…" style="border:none;background:transparent;font-family:var(--sans);font-size:13px;width:140px;outline:none;border-bottom:1px solid var(--border);padding:2px 0;" onchange="updateTracker(${i},'awb',this.value)"></td>
-    <td><input value="${t.carrier||''}" placeholder="Carrier…" style="border:none;background:transparent;font-family:var(--sans);font-size:13px;width:120px;outline:none;border-bottom:1px solid var(--border);padding:2px 0;" onchange="updateTracker(${i},'carrier',this.value)"></td>
+    <td><input value="${t.awb||''}" style="border:none;background:transparent;font-family:var(--sans);font-size:13px;width:140px;outline:none;border-bottom:1px solid var(--border);padding:2px 0;" onchange="updateTracker(${i},'awb',this.value)"></td>
+    <td><input value="${t.carrier||''}" style="border:none;background:transparent;font-family:var(--sans);font-size:13px;width:120px;outline:none;border-bottom:1px solid var(--border);padding:2px 0;" onchange="updateTracker(${i},'carrier',this.value)"></td>
     <td>${t.dispatchDate?fmtD(t.dispatchDate):'—'}</td>
     <td>${t.dest||'—'}</td>
     <td class="nr">$${fN(Math.round(t.valueUSD||0))}</td>
@@ -3639,7 +3767,7 @@ function closeBuyerModal(){document.getElementById('buyer-modal').classList.remo
 function saveBuyerModal(){
   const name=document.getElementById('bm-name').value.trim();
   if(!name){alert('Company name is required.');return;}
-  const buyer={name,addr1:g('bm-a1'),addr2:g('bm-a2'),trn:g('bm-trn'),contact:g('bm-con'),country:g('bm-cy')||'U.A.E.',payterm:g('bm-pay')||'After Inspection',notes:g('bm-notes'),createdAt:new Date().toISOString()};
+  const buyer={name,addr1:g('bm-a1'),addr2:g('bm-a2'),trn:g('bm-trn'),contact:g('bm-con'),country:g('bm-cy'),payterm:g('bm-pay'),notes:g('bm-notes'),createdAt:new Date().toISOString()};
   const buyers=LS.get(KEY_BUYERS);
   if(editingBuyerIdx!==null&&editingBuyerIdx!==undefined){buyers[editingBuyerIdx]={...buyers[editingBuyerIdx],...buyer};}
   else{buyers.push(buyer);}
@@ -3825,15 +3953,10 @@ function clearSerials(){
 
 
 function printDoc(){
-  // Show print tips overlay first
-  const overlay = document.getElementById('print-tips-overlay');
-  if(overlay) overlay.style.display='flex';
-  else window.print();
+  // Print immediately (no "before you print" overlay)
+  doPrint();
 }
 function doPrint(){
-  const overlay = document.getElementById('print-tips-overlay');
-  if(overlay) overlay.style.display='none';
-
   const docBody = document.getElementById('doc-body');
   if(!docBody || !docBody.innerHTML.trim()){
     alert('No document to print. Generate documents first.');
@@ -3882,30 +4005,45 @@ function doPrint(){
     '</style>' +
     '</head><body class="print-window">' +
     '<div class="doc-body" id="pw-doc-body">' + docHTML + '</div>' +
-    '<script>' +
-      'window.onload=function(){' +
-        // Measure content vs A4 printable area (297mm at 96dpi = 1122px)
-        // Apply scale so all content fits on one page
-        'var body=document.getElementById("pw-doc-body");' +
-        'var contentH=body.scrollHeight;' +
-        'var a4H=Math.round(297*96/25.4);' + // 297mm in px at 96dpi = 1122px
-        'var a4W=Math.round(210*96/25.4);' + // 210mm in px at 96dpi = 793px
-        'var scaleH=a4H/contentH;' +
-        'var scaleW=a4W/body.scrollWidth;' +
-        'var scale=Math.min(scaleH,scaleW,1);' + // never scale up, only down
-        'if(scale<1){' +
-          'body.style.transform="scale("+scale+")";' +
-          'body.style.transformOrigin="top left";' +
-          'body.style.width=(100/scale)+"%";' +
-          'document.body.style.overflow="hidden";' +
-          'document.body.style.height=a4H+"px";' +
-        '}' +
-        'setTimeout(function(){window.print();window.close();},400);' +
-      '};' +
-    '<\/script>' +
     '</body></html>'
   );
   pw.document.close();
+
+  // Fit-to-page + print (attach from opener so no script text renders)
+  pw.onload = function(){
+    try{
+      const el = pw.document.getElementById('pw-doc-body');
+      if(!el) { pw.print(); pw.close(); return; }
+
+      // A4 in px at 96dpi (matches Chrome print layout baseline)
+      const a4H = Math.round(297*96/25.4); // 1122
+      const a4W = Math.round(210*96/25.4); // 794-ish
+
+      // Force layout
+      const contentH = el.scrollHeight || el.getBoundingClientRect().height || a4H;
+      const contentW = el.scrollWidth  || el.getBoundingClientRect().width  || a4W;
+
+      const scaleH = a4H / contentH;
+      const scaleW = a4W / contentW;
+      const scale  = Math.min(scaleH, scaleW, 1);
+
+      el.style.transformOrigin = 'top left';
+      el.style.transform = 'scale(' + scale + ')';
+      el.style.width = (100/scale) + '%';
+
+      pw.document.body.style.overflow = 'hidden';
+      pw.document.body.style.height = a4H + 'px';
+
+      setTimeout(function(){
+        pw.focus();
+        pw.print();
+        setTimeout(function(){ pw.close(); }, 250);
+      }, 150);
+    }catch(e){
+      try{ pw.print(); }catch(_){}
+      try{ pw.close(); }catch(_){}
+    }
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3926,7 +4064,7 @@ function initInsMail(){
     if(invNo && !invNo.value)   invNo.value   = SD.ino || '';
     if(invDate && !invDate.value) invDate.value = SD.idate || '';
     if(consignee && !consignee.value) consignee.value = SD.cn || '';
-    if(dest && !dest.value)     dest.value     = SD.dest || '';
+    if(dest)                     dest.value     = SD.dest || '';
     const inrField = document.getElementById('ins-inr');
     if(inrField && !inrField.value){
       const xr = SD.xrate || 92.55;
@@ -4104,7 +4242,7 @@ function fmtD(s){if(!s)return'';const d=new Date(s);return`${String(d.getDate())
 function showAlert(id,cls,msg){const e=document.getElementById(id);if(!e)return;e.className=`alert ${cls} show`;e.textContent=msg;setTimeout(()=>e.classList.remove('show'),5000);}
 function showL(m){document.getElementById('ltxt').textContent=m||'';document.getElementById('loader').classList.add('show');}
 function hideL(){document.getElementById('loader').classList.remove('show');}
-function resetForm(){if(!confirm('Reset form?'))return;document.getElementById('ibody').innerHTML='';addItem(false);document.getElementById('plbody').innerHTML='';addPackRow(true);imeiData=[];document.getElementById('imei-card').style.display='none';document.getElementById('pack-file-badge').style.display='none';document.getElementById('pack-file-input').value='';SD=null;}
+function resetForm(){if(!confirm('Reset form?'))return;document.getElementById('ibody').innerHTML='';addItem();document.getElementById('plbody').innerHTML='';addPackRow(true);imeiData=[];document.getElementById('imei-card').style.display='none';document.getElementById('pack-file-badge').style.display='none';document.getElementById('pack-file-input').value='';SD=null;}
 
 function n2w(n){
   const a=['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
@@ -4180,7 +4318,22 @@ function renderPlTable(){
         td.style.cssText =
           'vertical-align:middle;text-align:center;font-weight:700;font-size:13px;' +
           (isMixed ? 'background:var(--accent-l);border-left:3px solid var(--accent);' : '');
-        td.textContent = grp.boxLabel || '';
+        // Editable Box No. input for manual entry
+        const bxInp = document.createElement('input');
+        bxInp.type = 'text';
+        bxInp.value = grp.boxLabel || '';
+        bxInp.style.cssText =
+          'width:72px;max-width:100%;text-align:center;font-weight:700;font-size:13px;' +
+          'border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--surface);';
+        bxInp.oninput = () => {
+          // Update the box label on the first row of the group, then regroup
+          if(plRows[row.rowIdx]) plRows[row.rowIdx].boxLabel = bxInp.value.trim();
+        };
+        bxInp.onblur = () => {
+          if(plRows[row.rowIdx]) plRows[row.rowIdx].boxLabel = bxInp.value.trim();
+          renderPlTable(); // regroup rows visually after edit
+        };
+        td.appendChild(bxInp);
         if(isMixed){
           const meta = document.createElement('div');
           meta.style.cssText = 'font-size:9px;font-weight:400;color:var(--accent);margin-top:2px;';
@@ -4192,7 +4345,7 @@ function renderPlTable(){
 
       // Description (inline dropdown)
       const descTd = document.createElement('td');
-      const wrap = descMakeInput('Description of goods', (inp/*, hsn*/)=>{
+      const wrap = descMakeInput('', (inp/*, hsn*/)=>{
         // Keep the underlying packing list row in sync
         if(plRows[row.rowIdx]) plRows[row.rowIdx].desc = inp.value;
       });
@@ -4207,7 +4360,6 @@ function renderPlTable(){
       pcsInp.type = 'number';
       pcsInp.dataset.plPcs = '';
       pcsInp.value = (row.pcs || row.pcs === 0) ? String(row.pcs) : '';
-      pcsInp.placeholder = '0';
       pcsInp.min = '1';
       pcsInp.style.cssText = 'width:100%;text-align:right;';
       pcsInp.oninput = ()=>{
@@ -4259,7 +4411,7 @@ function plDeleteRow(rowIdx){
 }
 
 function addPackRow(isDefault, pre){
-  const boxLabel = pre ? (pre.boxLabel||'') : (isDefault ? '1' : '');
+  const boxLabel = pre ? (pre.boxLabel||'') : '';
   const desc     = pre ? (pre.desc||'')     : (isDefault ? '' : '');
   const pcs      = pre ? (pre.pcsPerBox||pre.totalPcs||0) : 0;
 
@@ -4425,23 +4577,5 @@ function openGmailCompose(){
 
 </script>
 
-<!-- Print tips overlay -->
-<div id="print-tips-overlay" class="no-print" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:480px;box-shadow:0 8px 40px rgba(0,0,0,0.25);">
-    <div style="font-size:16px;font-weight:700;margin-bottom:14px;">🖨 Before you print</div>
-    <div style="font-size:13.5px;color:#444;line-height:1.7;margin-bottom:16px;">
-      To remove the browser's date/time and URL from the printout:
-      <ol style="margin:10px 0 0 18px;padding:0;font-size:13px;">
-        <li>In the print dialog, click <strong>"More settings"</strong></li>
-        <li>Uncheck <strong>"Headers and footers"</strong></li>
-        <li>Click <strong>Print</strong></li>
-      </ol>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button onclick="document.getElementById('print-tips-overlay').style.display='none'" style="padding:8px 16px;border:1px solid #ddd;border-radius:7px;background:#fff;cursor:pointer;font-size:13px;">Cancel</button>
-      <button onclick="doPrint()" style="padding:8px 20px;border:none;border-radius:7px;background:#1a4d8f;color:#fff;cursor:pointer;font-size:13px;font-weight:600;">Print Now</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
