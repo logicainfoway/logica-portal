@@ -1534,16 +1534,11 @@ function sinvGenerateInvoice(){
   try{ sinvUpsertSavedInvoice({toast:false}); }catch(e){}
 }
 
-
-function sinvPrint(){
-  const docBody = document.getElementById('sinv-doc-body');
-  if(!docBody || !docBody.innerHTML.trim()){ alert('Generate an invoice first.'); return; }
-
+/** Print any generated HTML in a new window, scaled to fit exactly one A4 page (nothing clipped). */
+function printHtmlFitOnePage(htmlFragment, titleStr){
   const styleEl = document.querySelector('head style');
   const css = styleEl ? styleEl.textContent : '';
-  const docHTML = docBody.innerHTML;
-  const invNo = (document.getElementById('sinv-invno')?.value || 'invoice').replace(/[^\w\-./]+/g, '_');
-
+  const safeTitle = String(titleStr || 'Document').replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
   const pw = window.open('', '_blank');
   if(!pw){
     alert('Your browser blocked the print window. Allow pop-ups for this page, then try again.');
@@ -1553,49 +1548,82 @@ function sinvPrint(){
   pw.document.write(
     '<!DOCTYPE html>' +
     '<html><head><meta charset="UTF-8">' +
-    '<title>Sales Invoice ' + invNo.replace(/_/g, ' ') + '</title>' +
+    '<title>' + safeTitle + '</title>' +
     '<style>' + css + '</style>' +
     '<style>' +
-      'html,body{margin:0;padding:0;background:#fff;}' +
       'body.print-window > *{display:block!important;visibility:visible!important;}' +
+      'html,body{margin:0;padding:0;background:#fff;width:210mm;}' +
       '.doc-body{' +
-        'padding:12mm 13mm 12mm 16mm;' +
-        'font-family:Palatino Linotype,Book Antiqua,Palatino,Georgia,serif;' +
+        'padding:10mm 11mm 10mm 13mm;' +
         'font-size:10.5px;' +
         'color:#111;' +
         'position:relative;' +
         'box-sizing:border-box;' +
-        'width:100%;max-width:210mm;' +
-        'overflow:visible !important;' +
-        'min-height:auto !important;' +
+        'width:210mm;' +
+        'overflow:visible!important;' +
+        'min-height:auto!important;' +
       '}' +
       'table{font-size:9.5px;}' +
       '.dtitle{font-size:14px;margin:6px 0;}' +
       '.dc-vlg{font-size:12px;}' +
-      '.dt .tot td{font-weight:bold;background:#f5f5f5;}' +
-      '@page{margin:10mm;size:A4 portrait;}' +
+      '.d-decl p, .d-decl{font-size:8.5px;line-height:1.35;}' +
+      '.d-bs{margin-top:8px;}' +
+      '.d-sig{min-height:44px;}' +
+      '@page{margin:0;size:A4 portrait;}' +
       '@media print{' +
         'body.print-window > *{display:block!important;visibility:visible!important;}' +
-        'html,body{background:#fff;}' +
+        'html,body{background:#fff;width:210mm;height:297mm;}' +
+        '.doc-body{transform-origin:top left;}' +
         '-webkit-print-color-adjust:exact;' +
         'print-color-adjust:exact;' +
       '}' +
     '</style>' +
     '</head><body class="print-window">' +
-    '<div class="doc-body" id="sinv-pw-doc">' + docHTML + '</div>' +
+    '<div class="doc-body" id="pw-doc-body">' + htmlFragment + '</div>' +
     '</body></html>'
   );
   pw.document.close();
 
   setTimeout(function(){
     try{
-      pw.focus();
-      pw.print();
-      setTimeout(function(){ try{ pw.close(); }catch(_){} }, 400);
+      const el = pw.document.getElementById('pw-doc-body');
+      if(!el){
+        pw.focus();
+        pw.print();
+        setTimeout(function(){ try{ pw.close(); }catch(_){} }, 300);
+        return;
+      }
+      const a4H = Math.round(297 * 96 / 25.4);
+      const a4W = Math.round(210 * 96 / 25.4);
+      const contentH = el.scrollHeight || el.getBoundingClientRect().height || 1;
+      const contentW = el.scrollWidth  || el.getBoundingClientRect().width  || 1;
+      const scaleH = a4H / Math.max(contentH, 1);
+      const scaleW = a4W / Math.max(contentW, 1);
+      const scale = Math.min(scaleH, scaleW, 1);
+      el.style.transformOrigin = 'top left';
+      el.style.transform = 'scale(' + scale + ')';
+      el.style.width = (100 / scale) + '%';
+      pw.document.body.style.overflow = 'hidden';
+      pw.document.body.style.margin = '0';
+      pw.document.documentElement.style.overflow = 'hidden';
+      pw.document.body.style.height = a4H + 'px';
+      setTimeout(function(){
+        pw.focus();
+        pw.print();
+        setTimeout(function(){ try{ pw.close(); }catch(_){} }, 300);
+      }, 80);
     }catch(e){
       try{ pw.print(); }catch(_){}
+      try{ pw.close(); }catch(_){}
     }
-  }, 150);
+  }, 200);
+}
+
+function sinvPrint(){
+  const docBody = document.getElementById('sinv-doc-body');
+  if(!docBody || !docBody.innerHTML.trim()){ alert('Generate an invoice first.'); return; }
+  const invNo = document.getElementById('sinv-invno')?.value || 'invoice';
+  printHtmlFitOnePage(docBody.innerHTML, 'Sales Invoice — ' + invNo);
 }
 
 
@@ -3206,12 +3234,7 @@ function printInsBill(){
   const b=d.buyers[0];
   const ctx={...d,b,invNo:d.ino+(b.sfx||''),piNo:d.ino.replace('EX/','PI/'),payterm:b.pay||d.pterm};
   const billHTML=rCI(ctx);
-  const styleContent=document.querySelector('style').textContent;
-  const win=window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><title>Export Bill ${d.ino}</title><style>body{font-family:Georgia,serif;font-size:11.5px;color:#111;padding:24px;}${styleContent}</style></head><body>${billHTML}<datalist id="desc-list"></datalist>
-</body></html>`);
-  win.document.close();win.focus();
-  setTimeout(()=>win.print(),400);
+  printHtmlFitOnePage(billHTML, 'Export Bill — ' + d.ino);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3975,88 +3998,7 @@ function doPrint(){
     alert('No document to print. Generate documents first.');
     return;
   }
-
-  const styleEl = document.querySelector('style');
-  const css = styleEl ? styleEl.textContent : '';
-  const docHTML = docBody.innerHTML;
-
-  const pw = window.open('', '_blank');
-  pw.document.open();
-  pw.document.write(
-    '<!DOCTYPE html>' +
-    '<html><head><meta charset="UTF-8">' +
-    '<title>Logica Infoway \u2014 Document</title>' +
-    '<style>' + css + '</style>' +
-    '<style>' +
-      /* Override portal-wide print rule that hides body > * */
-      'body.print-window > *{display:block!important;}' +
-      'html,body{margin:0;padding:0;background:#fff;width:210mm;}' +
-      '.doc-body{' +
-        'padding:12mm 13mm 12mm 16mm;' +
-        'font-size:10.5px;' +
-        'color:#111;' +
-        'position:relative;' +
-        'box-sizing:border-box;' +
-        'width:210mm;' +
-      '}' +
-      'table{font-size:9.5px;}' +
-      '.dtitle{font-size:14px;margin:6px 0;}' +
-      '.dc-vlg{font-size:12px;}' +
-      '.d-decl p, .d-decl{font-size:8.5px;line-height:1.4;}' +
-      '.d-bs{margin-top:8px;}' +
-      '.d-sig{min-height:50px;}' +
-      '@page{margin:0;size:A4 portrait;}' +
-      '@media print{' +
-        'body.print-window > *{display:block!important;}' +
-        'html,body{background:#fff;width:210mm;height:297mm;}' +
-        '.doc-body{' +
-          'transform-origin:top left;' +
-        '}' +
-        '-webkit-print-color-adjust:exact;' +
-        'print-color-adjust:exact;' +
-      '}' +
-    '</style>' +
-    '</head><body class="print-window">' +
-    '<div class="doc-body" id="pw-doc-body">' + docHTML + '</div>' +
-    '</body></html>'
-  );
-  pw.document.close();
-
-  // Fit-to-page + print (attach from opener so no script text renders)
-  pw.onload = function(){
-    try{
-      const el = pw.document.getElementById('pw-doc-body');
-      if(!el) { pw.print(); pw.close(); return; }
-
-      // A4 in px at 96dpi (matches Chrome print layout baseline)
-      const a4H = Math.round(297*96/25.4); // 1122
-      const a4W = Math.round(210*96/25.4); // 794-ish
-
-      // Force layout
-      const contentH = el.scrollHeight || el.getBoundingClientRect().height || a4H;
-      const contentW = el.scrollWidth  || el.getBoundingClientRect().width  || a4W;
-
-      const scaleH = a4H / contentH;
-      const scaleW = a4W / contentW;
-      const scale  = Math.min(scaleH, scaleW, 1);
-
-      el.style.transformOrigin = 'top left';
-      el.style.transform = 'scale(' + scale + ')';
-      el.style.width = (100/scale) + '%';
-
-      pw.document.body.style.overflow = 'hidden';
-      pw.document.body.style.height = a4H + 'px';
-
-      setTimeout(function(){
-        pw.focus();
-        pw.print();
-        setTimeout(function(){ pw.close(); }, 250);
-      }, 150);
-    }catch(e){
-      try{ pw.print(); }catch(_){}
-      try{ pw.close(); }catch(_){}
-    }
-  };
+  printHtmlFitOnePage(docBody.innerHTML, 'Logica Infoway — Document');
 }
 
 // ═══════════════════════════════════════════════════════════════
