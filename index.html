@@ -574,6 +574,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="supabase-config.js"></script>
 </head>
 <body>
 <div id="loader" class="loader"><div class="lbox"><div class="spin"></div><div class="ltxt" id="ltxt">Processing…</div></div></div>
@@ -1273,6 +1274,89 @@ const KEY_SETTINGS='logica_settings';
 const KEY_TRACKER='logica_tracker';
 const KEY_OUTGOING='logica_outgoing_inventory';
 
+// Keys synced to Supabase `app_state` for shared team data (when cloud is configured)
+const CLOUD_TRACKED_KEYS=[
+  KEY_BUYERS,KEY_CONSIGNEE,KEY_SHIPMENTS,KEY_SETTINGS,KEY_TRACKER,KEY_OUTGOING,
+  'sinv_invoices','desc_memory','inv_purchases','inv_transfers','inv_sales'
+];
+let sb=null;
+window.sbPromise=(async function initSupabase(){
+  try{
+    const u=window.SUPABASE_URL,k=window.SUPABASE_ANON_KEY;
+    if(!u||!k)return null;
+    const { createClient }=await import('https://esm.sh/@supabase/supabase-js@2');
+    sb=createClient(u,k,{auth:{persistSession:true,storage:localStorage,detectSessionInUrl:true}});
+    window.sb=sb;
+    return sb;
+  }catch(e){ console.warn('Supabase init failed',e); return null; }
+})();
+async function cloudHydrateFromServer(){
+  await window.sbPromise;
+  if(!sb)return;
+  const { data:{ session } }=await sb.auth.getSession();
+  if(!session)return;
+  const { data, error }=await sb.from('app_state').select('payload').eq('id',1).maybeSingle();
+  if(error){ console.warn('Cloud load:',error.message); return; }
+  if(!data||!data.payload||typeof data.payload!=='object')return;
+  const p=data.payload;
+  for(const key of CLOUD_TRACKED_KEYS){
+    if(p[key]===undefined)continue;
+    try{
+      if(p[key]===null){
+        localStorage.removeItem(key);
+        continue;
+      }
+      localStorage.setItem(key, typeof p[key]==='string'? p[key]: JSON.stringify(p[key]));
+    }catch(e){}
+  }
+}
+let _cloudSaveTimer=null;
+function scheduleCloudSave(){
+  if(!sb)return;
+  clearTimeout(_cloudSaveTimer);
+  _cloudSaveTimer=setTimeout(()=>{ cloudFlushToServer(); },2200);
+}
+async function cloudFlushToServer(){
+  await window.sbPromise;
+  if(!sb)return;
+  const { data:{ session } }=await sb.auth.getSession();
+  if(!session)return;
+  const { data: row, error: readErr }=await sb.from('app_state').select('payload').eq('id',1).maybeSingle();
+  if(readErr){ console.warn('Cloud read:',readErr.message); return; }
+  const merged={ ...(row?.payload && typeof row.payload==='object' ? row.payload : {}) };
+  for(const key of CLOUD_TRACKED_KEYS){
+    const raw=localStorage.getItem(key);
+    if(raw===null)continue;
+    try{ merged[key]=JSON.parse(raw); }catch{ merged[key]=raw; }
+  }
+  const { error }=await sb.from('app_state').upsert(
+    { id:1, payload:merged, updated_at:new Date().toISOString() },
+    { onConflict:'id' }
+  );
+  if(error)console.warn('Cloud save:',error.message);
+}
+async function forceCloudSync(){
+  clearTimeout(_cloudSaveTimer);
+  _cloudSaveTimer=null;
+  await cloudFlushToServer();
+}
+(function setupCloudSyncLifecycle(){
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState==='hidden') void forceCloudSync();
+  });
+  window.addEventListener('pagehide', ()=>{ void forceCloudSync(); });
+  setInterval(()=>{ void forceCloudSync(); }, 35000);
+})();
+(function patchCloudLocalStorage(){
+  const _set=LS.set.bind(LS);
+  LS.set=function(k,v){ _set(k,v); if(CLOUD_TRACKED_KEYS.includes(k))scheduleCloudSave(); };
+  const orig=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(key,val){
+    orig.apply(this,arguments);
+    if(this===localStorage && CLOUD_TRACKED_KEYS.includes(key))scheduleCloudSave();
+  };
+})();
+
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
@@ -1680,6 +1764,7 @@ function sinvUpsertSavedInvoice(opts){
   localStorage.setItem('sinv_invoices', JSON.stringify(saved));
   if(o.toast) alert('Invoice saved!');
   sinvRenderList();
+  void forceCloudSync();
   return true;
 }
 
@@ -1740,6 +1825,7 @@ function sinvTogglePaid(i){
   sinvRenderList();
   // Update outgoing inventory net stock immediately
   try{ outgoingRender(); }catch(e){}
+  void forceCloudSync();
 }
 
 function sinvViewInvoice(i){
@@ -1757,6 +1843,7 @@ function sinvDeleteInvoice(i){
   saved.splice(i,1);
   localStorage.setItem('sinv_invoices', JSON.stringify(saved));
   sinvRenderList();
+  void forceCloudSync();
 }
 
 function sinvClear(){
@@ -2081,6 +2168,7 @@ function outClearAll(){
   if(!confirm('Clear all outgoing inventory records?')) return;
   outSave([]);
   outgoingRender();
+  void forceCloudSync();
 }
 
 function outExportJson(){
@@ -2217,16 +2305,26 @@ function authShowErr(id, msg){ const e=document.getElementById(id); if(e){e.text
 function authShowOk(id, msg){ const e=document.getElementById(id); if(e){e.textContent=msg;e.classList.add('show');} }
 function authClearMsg(id){ const e=document.getElementById(id); if(e){e.classList.remove('show');e.textContent='';} }
 
-function authSignIn(){
+async function authSignIn(){
+  await window.sbPromise;
   const email = document.getElementById('signin-email').value.trim().toLowerCase();
   const pass  = document.getElementById('signin-pass').value;
   authClearMsg('signin-err');
   if(!email||!pass){ authShowErr('signin-err','Please enter your email and password.'); return; }
+  if(sb){
+    const { error }=await sb.auth.signInWithPassword({ email, password:pass });
+    if(error){ authShowErr('signin-err', error.message); return; }
+    document.getElementById('auth-screen').classList.remove('show');
+    const shell = document.querySelector('.shell');
+    if(shell) shell.style.display='';
+    await cloudHydrateFromServer();
+    location.reload();
+    return;
+  }
   const users = authGetUsers();
   const user  = users.find(u=>u.email===email);
   if(!user){ authShowErr('signin-err','No account found with that email address.'); return; }
   if(user.pass!==btoa(pass)){ authShowErr('signin-err','Incorrect password.'); return; }
-  // Success
   try{ localStorage.setItem('lil_session', JSON.stringify({email:user.email,name:user.name,ts:Date.now()})); }catch(e){}
   document.getElementById('auth-screen').classList.remove('show');
   const shell = document.querySelector('.shell');
@@ -2234,7 +2332,8 @@ function authSignIn(){
   switchTab('invoice');
 }
 
-function authSignUp(){
+async function authSignUp(){
+  await window.sbPromise;
   const name  = document.getElementById('signup-name').value.trim();
   const email = document.getElementById('signup-email').value.trim().toLowerCase();
   const pass  = document.getElementById('signup-pass').value;
@@ -2244,12 +2343,21 @@ function authSignUp(){
   if(!email||!email.includes('@')){ authShowErr('signup-err','Please enter a valid email address.'); return; }
   if(pass.length<6){ authShowErr('signup-err','Password must be at least 6 characters.'); return; }
   if(pass!==pass2){ authShowErr('signup-err','Passwords do not match.'); return; }
+  if(sb){
+    const { error }=await sb.auth.signUp({
+      email, password:pass,
+      options:{ data:{ full_name:name } }
+    });
+    if(error){ authShowErr('signup-err', error.message); return; }
+    authShowOk('signup-ok','Account created. If email confirmation is enabled, check your inbox — then sign in.');
+    setTimeout(()=>{ authShowTab('signin'); document.getElementById('signin-email').value=email; }, 1800);
+    return;
+  }
   const users = authGetUsers();
   if(users.find(u=>u.email===email)){ authShowErr('signup-err','An account with this email already exists.'); return; }
   users.push({name, email, pass:btoa(pass), created:Date.now()});
   authSaveUsers(users);
   authShowOk('signup-ok','Account created successfully! You can now sign in.');
-  // Auto-switch to sign in after 1.5s
   setTimeout(()=>{ authShowTab('signin'); document.getElementById('signin-email').value=email; }, 1500);
 }
 
@@ -2290,12 +2398,24 @@ function authForgotUser(){
   authShowOk('fu-ok','Your username (email) is: '+user.email+'\nAccount name: '+user.name);
 }
 
-function authLogout(){
+async function authLogout(){
+  await window.sbPromise;
+  if(sb){
+    try{ await sb.auth.signOut(); }catch(e){}
+  }
   try{ localStorage.removeItem('lil_session'); }catch(e){}
+  const shell=document.querySelector('.shell');
+  if(shell) shell.style.display='none';
   document.getElementById('auth-screen').classList.add('show');
 }
 
-window.onload=()=>{
+window.onload=async ()=>{
+  await window.sbPromise;
+  if(sb){
+    const { data:{ session } }=await sb.auth.getSession();
+    if(session) await cloudHydrateFromServer();
+  }
+
   // ── Splash → Auth/Portal flow ──
   const shell = document.querySelector('.shell');
   if(shell) shell.style.display='none';
@@ -2303,18 +2423,23 @@ window.onload=()=>{
   setTimeout(()=>{
     const splash = document.getElementById('splash-screen');
     splash.classList.add('fade-out');
-    setTimeout(()=>{
+    setTimeout(async ()=>{
       splash.style.display='none';
-      // Check if already signed in
-      try{
-        const sess = JSON.parse(localStorage.getItem('lil_session')||'null');
-        if(sess && (Date.now()-sess.ts < 8*60*60*1000)){
-          // Valid session — go straight to portal
-          if(shell) shell.style.display='';
-          return;
-        }
-      }catch(e){}
-      // Show auth screen
+      await window.sbPromise;
+      let showPortal=false;
+      if(sb){
+        const { data:{ session } }=await sb.auth.getSession();
+        if(session) showPortal=true;
+      }else{
+        try{
+          const sess=JSON.parse(localStorage.getItem('lil_session')||'null');
+          if(sess && (Date.now()-sess.ts < 8*60*60*1000)) showPortal=true;
+        }catch(e){}
+      }
+      if(showPortal){
+        if(shell) shell.style.display='';
+        return;
+      }
       document.getElementById('auth-screen').classList.add('show');
     }, 650);
   }, 2800);
@@ -2768,6 +2893,7 @@ function saveSettings(){
   LS.set(KEY_SETTINGS,getEx());
   const el=document.getElementById('settings-alert');
   el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);
+  void forceCloudSync();
 }
 function loadSettings(){
   const s=LS.get(KEY_SETTINGS,null);
@@ -2819,6 +2945,7 @@ function generateAll(){
     switchITab('docs');
     unlockTabs();
     hideL();
+    void forceCloudSync();
   },550);
 }
 
@@ -3255,6 +3382,7 @@ function saveShipment(){
   updateSidebarBadges();
   showAlert('form-alert','a-ok',`Shipment ${SD.ino} saved to archive successfully.`);
   renderArchive();renderTracker();
+  void forceCloudSync();
 }
 
 function updateSidebarBadges(){
@@ -3329,6 +3457,7 @@ function deleteArchive(ino){
   const ships=LS.get(KEY_SHIPMENTS).filter(s=>s.ino!==ino);
   LS.set(KEY_SHIPMENTS,ships);
   updateSidebarBadges();renderArchive();renderFinance();
+  void forceCloudSync();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3375,6 +3504,7 @@ function deleteTracker(i){
   tracker.splice(i,1);
   LS.set(KEY_TRACKER,tracker);
   updateSidebarBadges();renderTracker();
+  void forceCloudSync();
 }
 function openTrackerModal(){
   const ino=prompt('Enter Invoice Number (e.g. EX/252613000065):');
@@ -3383,6 +3513,7 @@ function openTrackerModal(){
   tracker.push({ino:ino.trim(),buyer:'',awb:'',carrier:'',dispatchDate:new Date().toISOString().split('T')[0],dest:'',valueUSD:0,status:'Pending'});
   LS.set(KEY_TRACKER,tracker);
   updateSidebarBadges();renderTracker();
+  void forceCloudSync();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -3408,6 +3539,7 @@ function invSave(){
   localStorage.setItem('inv_purchases', JSON.stringify(invPurchases));
   localStorage.setItem('inv_transfers', JSON.stringify(invTransfers));
   localStorage.setItem('inv_sales',     JSON.stringify(invSales));
+  void forceCloudSync();
 }
 
 function invUid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -3811,12 +3943,14 @@ function saveBuyerModal(){
   closeBuyerModal();
   updateSidebarBadges();
   renderBuyerDirectory();
+  void forceCloudSync();
 }
 function editBuyer(i){openBuyerModal(i);}
 function deleteBuyer(i){
   if(!confirm('Delete this buyer?'))return;
   const buyers=LS.get(KEY_BUYERS);buyers.splice(i,1);
   LS.set(KEY_BUYERS,buyers);updateSidebarBadges();renderBuyerDirectory();
+  void forceCloudSync();
 }
 
 // ═══════════════════════════════════════════════════════════════
