@@ -216,6 +216,9 @@ body{font-family:var(--sans);background:var(--s2);color:var(--ink);min-height:10
 ═══════════════════════════════════════════════ */
 .prev-wrap{background:var(--s3);border-radius:var(--r);padding:20px;}
 .doc-frame{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-lg);overflow:hidden;}
+/* Sales invoice preview: show full document (default .doc-frame/.doc-body overflow would clip long invoices) */
+#sinv-preview-wrap .doc-frame{overflow:visible;}
+#sinv-doc-body.doc-body{overflow:visible;min-height:0;}
 .prev-tb{background:var(--s2);padding:9px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink3);}
 .prev-tb-left{display:flex;align-items:center;gap:10px;}
 .doc-body{position:relative;padding:30px 38px 30px 47px;font-family:var(--serif);font-size:11.5px;color:#111;min-height:560px;overflow:hidden;}
@@ -435,27 +438,8 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 
 
 @media print{
-  /* Hide the entire portal */
-  body > *{ display:none!important; }
-  /* When sinv-printing class is on body, show only sinv-doc-body */
-  body.sinv-printing #sinv-doc-body{
-    display:block!important;
-    visibility:visible!important;
-    position:fixed!important;
-    top:0!important; left:0!important;
-    width:100vw!important;
-    height:100vh!important;
-    margin:0!important;
-    padding:9mm 12mm 9mm 15mm!important;
-    font-size:9px!important;
-    color:#111!important;
-    background:#fff!important;
-    box-sizing:border-box!important;
-    overflow:hidden!important;
-  }
-  body.sinv-printing #sinv-doc-body *{ visibility:visible!important; }
-  body.sinv-printing #sinv-doc-body table{ font-size:8.5px!important; }
-  body.sinv-printing #sinv-doc-body .dtitle{ font-size:13px!important; }
+  /* Hide portal shell when printing from the main page (print preview uses a separate window with .print-window) */
+  body:not(.print-window) > *{ display:none!important; }
   html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   @page{ size:A4 portrait; margin:0; }
 }
@@ -930,6 +914,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
         <div class="pill-row" id="buyer-pills"></div>
       </div>
       <div class="doc-grid" id="doc-grid">
+        <div class="doc-card" onclick="selDoc('eb')" id="dc-eb"><div class="dc-ic">🧾</div><div class="dct">Export Bill</div><div class="dcd">Pre-commercial invoice format</div></div>
         <div class="doc-card selected" onclick="selDoc('ci')" id="dc-ci"><div class="dc-ic">🧾</div><div class="dct">Commercial Invoice</div><div class="dcd">Full export invoice</div></div>
         <div class="doc-card" onclick="selDoc('pl')" id="dc-pl"><div class="dc-ic">📦</div><div class="dct">Packing List</div><div class="dcd">Box-wise breakdown</div></div>
         <div class="doc-card" onclick="selDoc('po')" id="dc-po"><div class="dc-ic">📋</div><div class="dct">Purchase Order</div><div class="dcd">Buyer stamp &amp; sign only</div></div>
@@ -1060,12 +1045,15 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     </div>
     <div class="card-body" style="padding:0;">
       <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
-        <input id="out-search" oninput="outgoingRender()"
-          style="width:320px;max-width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;">
+        <input id="out-search" type="search" oninput="outgoingRender()" placeholder="Filter by destination or product name…"
+          style="width:min(420px,100%);max-width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:var(--sans);font-size:13px;">
         <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm" onclick="outExportJson()">Export JSON</button>
           <button class="btn btn-danger btn-sm" onclick="outClearAll()">Clear All</button>
         </div>
+      </div>
+      <div style="padding:6px 14px 0;color:var(--ink3);font-size:11px;">
+        Note: Products with unit price below $1 are not included in outgoing inventory.
       </div>
       <div id="outgoing-sheets" style="padding:14px;"></div>
     </div>
@@ -1551,56 +1539,63 @@ function sinvPrint(){
   const docBody = document.getElementById('sinv-doc-body');
   if(!docBody || !docBody.innerHTML.trim()){ alert('Generate an invoice first.'); return; }
 
-  // Inject a temporary print-only <style> that hides everything except sinv-doc-body
-  const styleId = 'sinv-print-style';
-  let st = document.getElementById(styleId);
-  if(st) st.remove();
-  st = document.createElement('style');
-  st.id = styleId;
-  st.textContent = [
-    '@media print{',
-    '  body > *:not(#sinv-print-mount){ display:none !important; visibility:hidden !important; }',
-    '  #sinv-print-mount{',
-    '    display:block !important;',
-    '    visibility:visible !important;',
-    '    position:fixed !important;',
-    '    top:0 !important; left:0 !important;',
-    '    width:100% !important;',
-    '    height:auto !important;',
-    '    z-index:999999 !important;',
-    '    background:#fff !important;',
-    '  }',
-    '  #sinv-print-mount *{ visibility:visible !important; }',
-    '  #sinv-print-mount .doc-body{',
-    '    width:100% !important;',
-    '    padding:9mm 11mm 9mm 14mm !important;',
-    '    font-size:9px !important;',
-    '    box-sizing:border-box !important;',
-    '  }',
-    '  #sinv-print-mount table{ font-size:8.5px !important; }',
-    '  @page{ size:A4 portrait; margin:0; }',
-    '  -webkit-print-color-adjust:exact;',
-    '  print-color-adjust:exact;',
-    '}'
-  ].join('\n');
-  document.head.appendChild(st);
+  const styleEl = document.querySelector('head style');
+  const css = styleEl ? styleEl.textContent : '';
+  const docHTML = docBody.innerHTML;
+  const invNo = (document.getElementById('sinv-invno')?.value || 'invoice').replace(/[^\w\-./]+/g, '_');
 
-  // Mount a wrapper div with the invoice content directly in body
-  let mount = document.getElementById('sinv-print-mount');
-  if(mount) mount.remove();
-  mount = document.createElement('div');
-  mount.id = 'sinv-print-mount';
-  mount.innerHTML = '<div class="doc-body">' + docBody.innerHTML + '</div>';
-  document.body.appendChild(mount);
+  const pw = window.open('', '_blank');
+  if(!pw){
+    alert('Your browser blocked the print window. Allow pop-ups for this page, then try again.');
+    return;
+  }
+  pw.document.open();
+  pw.document.write(
+    '<!DOCTYPE html>' +
+    '<html><head><meta charset="UTF-8">' +
+    '<title>Sales Invoice ' + invNo.replace(/_/g, ' ') + '</title>' +
+    '<style>' + css + '</style>' +
+    '<style>' +
+      'html,body{margin:0;padding:0;background:#fff;}' +
+      'body.print-window > *{display:block!important;visibility:visible!important;}' +
+      '.doc-body{' +
+        'padding:12mm 13mm 12mm 16mm;' +
+        'font-family:Palatino Linotype,Book Antiqua,Palatino,Georgia,serif;' +
+        'font-size:10.5px;' +
+        'color:#111;' +
+        'position:relative;' +
+        'box-sizing:border-box;' +
+        'width:100%;max-width:210mm;' +
+        'overflow:visible !important;' +
+        'min-height:auto !important;' +
+      '}' +
+      'table{font-size:9.5px;}' +
+      '.dtitle{font-size:14px;margin:6px 0;}' +
+      '.dc-vlg{font-size:12px;}' +
+      '.dt .tot td{font-weight:bold;background:#f5f5f5;}' +
+      '@page{margin:10mm;size:A4 portrait;}' +
+      '@media print{' +
+        'body.print-window > *{display:block!important;visibility:visible!important;}' +
+        'html,body{background:#fff;}' +
+        '-webkit-print-color-adjust:exact;' +
+        'print-color-adjust:exact;' +
+      '}' +
+    '</style>' +
+    '</head><body class="print-window">' +
+    '<div class="doc-body" id="sinv-pw-doc">' + docHTML + '</div>' +
+    '</body></html>'
+  );
+  pw.document.close();
 
-  // Print then clean up
   setTimeout(function(){
-    window.print();
-    setTimeout(function(){
-      mount.remove();
-      st.remove();
-    }, 1000);
-  }, 300);
+    try{
+      pw.focus();
+      pw.print();
+      setTimeout(function(){ try{ pw.close(); }catch(_){} }, 400);
+    }catch(e){
+      try{ pw.print(); }catch(_){}
+    }
+  }, 150);
 }
 
 
@@ -2031,16 +2026,26 @@ function outUpsertShipment(sh){
 
 function outUpsertFromCommercialInvoice(sd){
   if(!sd || !sd.ino || !sd.dest || !sd.items || !sd.items.length) return;
+  const outgoingItems = sd.items.map(it => ({
+    product: (it.desc||'').trim(),
+    qty: +it.qty || 0,
+    price: +it.price || 0
+  })).filter(x => x.product && x.qty > 0 && x.price >= 1);
+
+  // If nothing qualifies for outgoing inventory, remove any prior snapshot for this invoice.
+  if(!outgoingItems.length){
+    const rows = outLoad();
+    const next = rows.filter(x => x.invNo !== sd.ino);
+    if(next.length !== rows.length) outSave(next);
+    return;
+  }
+
   const ship = {
     invNo: sd.ino,
     date: sd.idate || new Date().toISOString().split('T')[0],
     dest: sd.dest,
-    items: sd.items.map(it => ({
-      product: (it.desc||'').trim(),
-      qty: +it.qty || 0
-    })).filter(x => x.product && x.qty > 0)
+    items: outgoingItems.map(({product, qty}) => ({ product, qty }))
   };
-  if(!ship.items.length) return;
   outUpsertShipment(ship);
 }
 
@@ -2808,7 +2813,7 @@ function selDoc(t){
   document.querySelectorAll('.doc-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('dc-'+t)?.classList.add('selected');
   activeDoc=t;
-  const lbls={ci:'Commercial Invoice',pl:'Packing List',po:'Purchase Order — Buyer Stamp & Signature',sn:'Serial / IMEI Number Register'};
+  const lbls={eb:'Export Bill',ci:'Commercial Invoice',pl:'Packing List',po:'Purchase Order — Buyer Stamp & Signature',sn:'Serial / IMEI Number Register'};
   document.getElementById('doc-lbl').textContent=lbls[t];
   renderDoc();
 }
@@ -2819,7 +2824,7 @@ function renderDoc(){
   const piNo=invNo.replace('EX/','PI/');
   const payterm=b.pay||SD.pterm;
   const ctx={...SD,b,invNo,piNo,payterm};
-  const fn={ci:rCI,pl:rPL,po:rPO,sn:rSN};
+  const fn={eb:rEB,ci:rCI,pl:rPL,po:rPO,sn:rSN};
   document.getElementById('doc-body').innerHTML=(fn[activeDoc]||'')(ctx);
 }
 
@@ -2910,8 +2915,9 @@ function declBlock(d){return`<div class="d-decl">${DECL.split('\n').map(l=>`<p>$
 // DOCUMENT RENDERERS
 // ═══════════════════════════════════════════════════════════════
 function rCI(d){
+  const docTitle = d._docTitle || 'Commercial Invoice';
   const rows=d.items.map((i,n)=>`<tr><td class="nc" style="font-weight:600;">${n+1}</td><td>${i.desc}</td><td class="nc">${i.hsn}</td><td class="nc">${fN(i.qty)} Pcs</td><td class="nr">${i.price.toFixed(2)}</td><td class="nr">${fN(i.amtUSD)}</td><td class="nr">${fINR(i.amtINR)}</td></tr>`).join('');
-  return`${lhHead()}<div class="dtitle">Commercial Invoice</div>${topGrid(d,false)}${csgBuyer(d)}${routeT(d)}
+  return`${lhHead()}<div class="dtitle">${docTitle}</div>${topGrid(d,false)}${csgBuyer(d)}${routeT(d)}
     <table class="dt"><thead><tr><th style="width:60px">Marks&amp;Nos</th><th>Description of Goods</th><th>HSN</th><th>Qty</th><th>Rate CIF US$</th><th>Amount CIF US$</th><th>Amount INR</th></tr></thead>
     <tbody>${rows}<tr class="tot"><td colspan="3">Total</td><td class="nc">${fN(d.totalPcs)} Pcs</td><td></td><td class="nr">${fN(d.totalUSD)}</td><td class="nr">${fINR(d.totalINR)}</td></tr></tbody></table>
     <div style="display:grid;grid-template-columns:1fr auto;gap:14px;margin-top:8px;align-items:start;">
@@ -2922,6 +2928,10 @@ function rCI(d){
         <tr style="font-weight:bold;background:#f0f0f0;"><td style="padding:3px 9px;border:.5px solid #ccc;">Invoice Value</td><td style="padding:3px 9px;border:.5px solid #ccc;text-align:right;">${fINR(d.invINR)}</td></tr>
       </table>
     </div>${declBlock(d)}${bkSig(d)}${lhFoot()}`;
+}
+
+function rEB(d){
+  return rCI({...d, _docTitle:'Export Bill'});
 }
 
 function rPL(d){
@@ -3002,7 +3012,10 @@ function rSN(d){
 
 function rPO(d){
   const b=d.b;
-  const rows=d.items.map((i,n)=>`
+  const poItems = (d.items||[]).filter(i => (+i.price || 0) >= 1);
+  const poTotalPcs = poItems.reduce((s,i)=>s+(+i.qty||0),0);
+  const poTotalUSD = poItems.reduce((s,i)=>s+(+i.amtUSD||0),0);
+  const rows=poItems.map((i,n)=>`
     <tr>
       <td class="nc">${n+1}</td>
       <td>${i.desc}</td>
@@ -3069,15 +3082,15 @@ function rPO(d){
         ${rows}
         <tr class="tot">
           <td colspan="2" style="font-weight:bold;">TOTAL</td>
-          <td class="nc">${fN(d.totalPcs)} Pcs</td>
+          <td class="nc">${fN(poTotalPcs)} Pcs</td>
           <td></td>
-          <td class="nr"><strong>USD ${fN(d.totalUSD)}</strong></td>
+          <td class="nr"><strong>USD ${fN(poTotalUSD)}</strong></td>
         </tr>
       </tbody>
     </table>
 
     <div class="d-words" style="margin-top:10px;">
-      <strong>Amount in Words: USD – ${n2w(Math.round(d.totalUSD))} ONLY</strong>
+      <strong>Amount in Words: USD – ${n2w(Math.round(poTotalUSD))} ONLY</strong>
     </div>
     <div style="font-size:10px;margin-top:5px;color:#555;">
       Payment Terms: <strong>100% AGAINST INSPECTION OF STOCKS</strong>
