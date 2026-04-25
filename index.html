@@ -712,7 +712,9 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <div class="ni active" id="nav-invoice" onclick="switchTab('invoice')"><span class="ni-icon">🧾</span>Shipment Lodging</div>
     <div class="ni" id="nav-salesinv" onclick="switchTab('salesinv')"><span class="ni-icon">🧾</span>Sales Invoicing</div>
     <div class="sb-section">Management</div>
+    <div class="ni" id="nav-buyers" onclick="switchTab('buyers')"><span class="ni-icon">👥</span>Buyer Directory</div>
     <div class="ni" id="nav-inventory" onclick="switchTab('inventory')"><span class="ni-icon">📦</span>Outgoing Inventory</div>
+    <div class="ni" id="nav-consignees" onclick="switchTab('consignees')"><span class="ni-icon">🏢</span>Consignee Directory</div>
     <div class="sb-section">System</div>
     <div class="ni" id="nav-settings" onclick="switchTab('settings')"><span class="ni-icon">⚙️</span>Company Settings</div>
   </nav>
@@ -1112,6 +1114,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
           <div class="field" style="grid-column:span 2;"><label>Address Line 1</label><input type="text" id="sinv-cn-addr"></div>
           <div class="field"><label>Address Line 2</label><input type="text" id="sinv-cn-addr2"></div>
           <div class="field"><label>Contact No.</label><input type="text" id="sinv-cn-phone"></div>
+          <div class="field"><label>Country</label><input type="text" id="sinv-cn-country"></div>
         </div>
       </div>
     </div>
@@ -1214,6 +1217,56 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     </div>
   </div><!-- /sinv-panel-list -->
 </div><!-- /panel-salesinv -->
+<!-- ============================================================
+     TAB: BUYER DIRECTORY
+============================================================ -->
+<div class="panel" id="panel-buyers">
+  <div class="pg-head"><h2>Buyer Directory</h2><p>Save buyer records for quick auto-fill in Shipment Lodging and Sales Invoicing.</p></div>
+  <div class="btn-row" style="margin-bottom:12px;">
+    <button class="btn btn-primary" onclick="openBuyerModal()">➕ Add Buyer</button>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="sec-ic">📚</div><h3>Saved Buyers</h3><span class="sub">Click Edit to update an existing buyer.</span></div>
+    <div class="card-body">
+      <div id="buyers-empty" class="empty" style="padding:22px 10px;">No buyers saved yet.</div>
+      <div id="buyer-grid" class="buyer-grid"></div>
+    </div>
+  </div>
+</div><!-- /panel-buyers -->
+
+<!-- ============================================================
+     TAB: CONSIGNEE DIRECTORY
+============================================================ -->
+<div class="panel" id="panel-consignees">
+  <div class="pg-head"><h2>Consignee Directory</h2><p>Save consignee records for quick auto-fill in Shipment Lodging and Sales Invoicing.</p></div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-head"><div class="sec-ic">➕</div><h3>Add / Update Consignee</h3></div>
+    <div class="card-body">
+      <div class="grid g3">
+        <div class="field" style="grid-column:span 2;"><label>Company Name *</label><input id="cd-name"></div>
+        <div class="field"><label>TRN / TAX ID</label><input id="cd-trn"></div>
+        <div class="field" style="grid-column:span 2;"><label>Address Line 1</label><input id="cd-a1"></div>
+        <div class="field"><label>Address Line 2</label><input id="cd-a2"></div>
+        <div class="field"><label>Contact no.</label><input id="cd-con"></div>
+        <div class="field"><label>Country</label><input id="cd-cy"></div>
+        <div class="field"><label>Per Carriage</label><input id="cd-pcar"></div>
+      </div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn btn-success" onclick="saveConsigneeDirectoryEntry()">✓ Save Consignee</button>
+        <button class="btn btn-ghost" onclick="clearConsigneeDirectoryForm()">✕ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="sec-ic">📚</div><h3>Saved Consignees</h3><span class="sub">Click Edit to update an existing consignee.</span></div>
+    <div class="card-body">
+      <div id="consignee-empty" class="empty" style="padding:22px 10px;">No consignees saved yet.</div>
+      <div id="consignee-grid" class="buyer-grid"></div>
+    </div>
+  </div>
+</div><!-- /panel-consignees -->
+
 <!-- ============================================================
      TAB 6: SETTINGS
 ============================================================ -->
@@ -1999,7 +2052,7 @@ function sinvDeleteInvoice(i){
 function sinvClear(){
   ['sinv-invno','sinv-pono','sinv-podate','sinv-notes',
    'sinv-cust-name','sinv-cust-addr','sinv-cust-addr2',
-   'sinv-cn-name','sinv-cn-addr','sinv-cn-addr2','sinv-cn-trn','sinv-cn-phone'].forEach(id=>{
+   'sinv-cn-name','sinv-cn-addr','sinv-cn-addr2','sinv-cn-trn','sinv-cn-phone','sinv-cn-country'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('sinv-items-body').innerHTML='';
@@ -2156,6 +2209,7 @@ function descMakeInput(placeholder, onSelectCb){
 // PARTY MEMORY (Consignee + Buyers) → inline dropdown
 // ═══════════════════════════════════════════════════════════════════════
 let _consigneeMemory = [];
+let editingConsigneeIdx = null;
 
 function consigneeLoadMemory(){
   try{
@@ -2165,6 +2219,17 @@ function consigneeLoadMemory(){
     _consigneeMemory = [];
   }
   return _consigneeMemory;
+}
+
+function consigneeUpsert(obj){
+  const name = (obj?.name||'').trim();
+  if(!name) return;
+  const idx = _consigneeMemory.findIndex(x => (x.name||'').toLowerCase() === name.toLowerCase());
+  if(idx >= 0) _consigneeMemory[idx] = { ..._consigneeMemory[idx], ...obj };
+  else _consigneeMemory.unshift(obj);
+
+  if(_consigneeMemory.length > 100) _consigneeMemory = _consigneeMemory.slice(0,100);
+  try{ localStorage.setItem(KEY_CONSIGNEE, JSON.stringify(_consigneeMemory)); }catch(e){}
 }
 
 function consigneeSaveFromForm(){
@@ -2179,13 +2244,7 @@ function consigneeSaveFromForm(){
     country: g('ccy')?.trim() || '',
     pcar:  g('pcar')?.trim() || '',
   };
-
-  const idx = _consigneeMemory.findIndex(x => (x.name||'').toLowerCase() === name.toLowerCase());
-  if(idx >= 0) _consigneeMemory[idx] = { ..._consigneeMemory[idx], ...obj };
-  else _consigneeMemory.unshift(obj);
-
-  if(_consigneeMemory.length > 100) _consigneeMemory = _consigneeMemory.slice(0,100);
-  try{ localStorage.setItem(KEY_CONSIGNEE, JSON.stringify(_consigneeMemory)); }catch(e){}
+  consigneeUpsert(obj);
 }
 
 function consigneeGetOptions(filter){
@@ -2193,7 +2252,142 @@ function consigneeGetOptions(filter){
   return _consigneeMemory
     .filter(x => x && x.name)
     .filter(x => !q || x.name.toLowerCase().includes(q))
-    .slice(0,6);
+    .slice(0,10);
+}
+
+function fillShipmentConsignee(c){
+  if(!c) return;
+  document.getElementById('cn').value = c.name || '';
+  document.getElementById('ca1').value = c.addr1 || '';
+  document.getElementById('ca2').value = c.addr2 || '';
+  document.getElementById('ctrn').value = c.trn || '';
+  document.getElementById('cc').value = c.contact || '';
+  document.getElementById('ccy').value = c.country || '';
+  document.getElementById('pcar').value = c.pcar || '';
+}
+
+function fillSalesConsignee(c){
+  if(!c) return;
+  document.getElementById('sinv-cn-name').value = c.name || '';
+  document.getElementById('sinv-cn-addr').value = c.addr1 || '';
+  document.getElementById('sinv-cn-addr2').value = c.addr2 || '';
+  document.getElementById('sinv-cn-trn').value = c.trn || '';
+  document.getElementById('sinv-cn-phone').value = c.contact || '';
+  const cy = document.getElementById('sinv-cn-country');
+  if(cy) cy.value = c.country || '';
+  document.getElementById('sinv-pcar').value = c.pcar || document.getElementById('sinv-pcar').value || '';
+}
+
+function fillSalesBuyer(b){
+  if(!b) return;
+  document.getElementById('sinv-cust-name').value = b.name || '';
+  document.getElementById('sinv-cust-addr').value = b.addr1 || '';
+  document.getElementById('sinv-cust-addr2').value = b.addr2 || '';
+  const terms = document.getElementById('sinv-terms');
+  if(terms && b.payterm) terms.value = b.payterm;
+}
+
+function renderConsigneeDirectory(){
+  const list = consigneeLoadMemory();
+  const grid = document.getElementById('consignee-grid');
+  const empty = document.getElementById('consignee-empty');
+  if(!grid || !empty) return;
+  if(!list.length){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = list.map((c,i)=>{
+    const initials=(c.name||'?').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    return`<div class="buyer-card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div class="buyer-avatar">${initials}</div>
+        <div>
+          <div style="font-weight:700;font-size:13.5px;">${escH(c.name)}</div>
+          <div style="font-size:11px;color:var(--ink3);">${escH(c.country||'—')}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--ink2);line-height:1.7;border-top:1px solid var(--border);padding-top:10px;">
+        ${c.addr1?`<div>${escH(c.addr1)}</div>`:''}
+        ${c.addr2?`<div>${escH(c.addr2)}</div>`:''}
+        ${c.trn?`<div style="color:var(--ink3);">TRN: ${escH(c.trn)}</div>`:''}
+        ${c.contact?`<div>📞 ${escH(c.contact)}</div>`:''}
+        <div style="margin-top:6px;"><span class="tag">Per Carriage: ${escH(c.pcar||'—')}</span></div>
+      </div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-secondary btn-sm" onclick="useConsigneeInForms(${i})">↪ Use in Forms</button>
+        <button class="btn btn-ghost btn-sm" onclick="editConsigneeDirectoryEntry(${i})">✏ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteConsigneeDirectoryEntry(${i})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function useConsigneeInForms(i){
+  const list = consigneeLoadMemory();
+  const c = list[i];
+  if(!c) return;
+  fillShipmentConsignee(c);
+  fillSalesConsignee(c);
+  scheduleDraftSave();
+  void forceCloudSync();
+  switchTab('invoice');
+  showAlert('form-alert','a-ok',`Consignee "${c.name}" applied to Shipment Lodging and Sales Invoicing forms.`);
+}
+
+function clearConsigneeDirectoryForm(){
+  editingConsigneeIdx=null;
+  ['cd-name','cd-a1','cd-a2','cd-trn','cd-con','cd-cy','cd-pcar'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+}
+
+function editConsigneeDirectoryEntry(i){
+  const list = consigneeLoadMemory();
+  const c = list[i];
+  if(!c) return;
+  editingConsigneeIdx=i;
+  document.getElementById('cd-name').value = c.name || '';
+  document.getElementById('cd-a1').value = c.addr1 || '';
+  document.getElementById('cd-a2').value = c.addr2 || '';
+  document.getElementById('cd-trn').value = c.trn || '';
+  document.getElementById('cd-con').value = c.contact || '';
+  document.getElementById('cd-cy').value = c.country || '';
+  document.getElementById('cd-pcar').value = c.pcar || '';
+  switchTab('consignees');
+}
+
+function saveConsigneeDirectoryEntry(){
+  const name=(document.getElementById('cd-name')?.value||'').trim();
+  if(!name){ alert('Company name is required.'); return; }
+  const obj={
+    name,
+    addr1:(document.getElementById('cd-a1')?.value||'').trim(),
+    addr2:(document.getElementById('cd-a2')?.value||'').trim(),
+    trn:(document.getElementById('cd-trn')?.value||'').trim(),
+    contact:(document.getElementById('cd-con')?.value||'').trim(),
+    country:(document.getElementById('cd-cy')?.value||'').trim(),
+    pcar:(document.getElementById('cd-pcar')?.value||'').trim(),
+    updatedAt:new Date().toISOString()
+  };
+  const list = consigneeLoadMemory();
+  if(editingConsigneeIdx!==null && list[editingConsigneeIdx]){
+    list[editingConsigneeIdx] = { ...list[editingConsigneeIdx], ...obj };
+    try{ localStorage.setItem(KEY_CONSIGNEE, JSON.stringify(list)); }catch(e){}
+  }else{
+    consigneeUpsert(obj);
+  }
+  clearConsigneeDirectoryForm();
+  renderConsigneeDirectory();
+  scheduleDraftSave();
+  void forceCloudSync();
+}
+
+function deleteConsigneeDirectoryEntry(i){
+  if(!confirm('Delete this consignee?')) return;
+  const list = consigneeLoadMemory();
+  list.splice(i,1);
+  try{ localStorage.setItem(KEY_CONSIGNEE, JSON.stringify(list)); }catch(e){}
+  renderConsigneeDirectory();
+  scheduleDraftSave();
+  void forceCloudSync();
 }
 
 function attachInlineDropdown(inputEl, optionsFn, onSelectFn){
@@ -2608,6 +2802,7 @@ window.onload=async ()=>{
   addBuyer();
   updateSidebarBadges();
   renderBuyerDirectory();
+  renderConsigneeDirectory();
   renderArchive();
   renderTracker();
   renderFinance();
@@ -2619,17 +2814,7 @@ window.onload=async ()=>{
     attachInlineDropdown(
       cnEl,
       (filter) => consigneeGetOptions(filter),
-      (b) => {
-        if(!b) return;
-        document.getElementById('cn').value = b.name || '';
-        document.getElementById('ca1').value = b.addr1 || '';
-        document.getElementById('ca2').value = b.addr2 || '';
-        document.getElementById('ctrn').value = b.trn || '';
-        document.getElementById('cc').value = b.contact || '';
-        document.getElementById('ccy').value = b.country || '';
-        // Always default per-carriage to N/A when selecting consignee.
-        document.getElementById('pcar').value = 'N/A';
-      }
+      (b) => { if(!b) return; fillShipmentConsignee(b); }
     );
   }
   // Save consignee to memory after manual edits (once user leaves a field)
@@ -2639,6 +2824,29 @@ window.onload=async ()=>{
       el.addEventListener('blur', () => consigneeSaveFromForm());
     }
   });
+  const sinvCnEl = document.getElementById('sinv-cn-name');
+  if(sinvCnEl){
+    attachInlineDropdown(
+      sinvCnEl,
+      (filter)=>consigneeGetOptions(filter),
+      (b)=>{ if(!b) return; fillSalesConsignee(b); }
+    );
+  }
+  const sinvBuyerEl = document.getElementById('sinv-cust-name');
+  if(sinvBuyerEl){
+    attachInlineDropdown(
+      sinvBuyerEl,
+      (filter)=>{
+        const buyers = LS.get(KEY_BUYERS);
+        const q=(filter||'').trim().toLowerCase();
+        return buyers
+          .filter(b=>b && b.name)
+          .filter(b=>!q || b.name.toLowerCase().includes(q))
+          .slice(0,10);
+      },
+      (b)=>{ if(!b) return; fillSalesBuyer(b); }
+    );
+  }
   updateDatalist();
   invLoad();
   invRender();
@@ -2683,7 +2891,7 @@ function switchTab(name){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('nav-'+name).classList.add('active');
-  const titles={invoice:'Shipment Lodging',salesinv:'Sales Invoicing',inventory:'Outgoing Inventory',settings:'Company Settings'};
+  const titles={invoice:'Shipment Lodging',salesinv:'Sales Invoicing',buyers:'Buyer Directory',inventory:'Outgoing Inventory',consignees:'Consignee Directory',settings:'Company Settings'};
   document.getElementById('tb-title').textContent=titles[name]||name;
   document.getElementById('tb-sub').textContent='';
 
@@ -2901,8 +3109,7 @@ function addBuyer(preset){
         document.getElementById(`b${idx}-a2`).value = b.addr2 || '';
         document.getElementById(`b${idx}-trn`).value = b.trn || '';
         document.getElementById(`b${idx}-con`).value = b.contact || '';
-        // Country is not prefilled (user enters when required).
-        document.getElementById(`b${idx}-cy`).value  = '';
+        document.getElementById(`b${idx}-cy`).value  = b.country || '';
         document.getElementById(`b${idx}-pay`).value = b.payterm || '';
       }
     );
@@ -4076,11 +4283,35 @@ function renderBuyerDirectory(){
         <div style="margin-top:6px;"><span class="tag">Pay: ${b.payterm||'—'}</span></div>
       </div>
       <div class="btn-row" style="margin-top:12px;">
+        <button class="btn btn-secondary btn-sm" onclick="useBuyerInForms(${i})">↪ Use in Forms</button>
         <button class="btn btn-ghost btn-sm" onclick="editBuyer(${i})">✏ Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteBuyer(${i})">🗑</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function useBuyerInForms(i){
+  const buyers = LS.get(KEY_BUYERS);
+  const b = buyers[i];
+  if(!b) return;
+  fillSalesBuyer(b);
+  // Ensure Shipment Lodging has at least one buyer slot, then apply to Buyer 1.
+  if(!document.getElementById('b0-n')) addBuyer({});
+  if(document.getElementById('b0-n')){
+    document.getElementById('b0-n').value = b.name || '';
+    document.getElementById('b0-a1').value = b.addr1 || '';
+    document.getElementById('b0-a2').value = b.addr2 || '';
+    document.getElementById('b0-trn').value = b.trn || '';
+    document.getElementById('b0-con').value = b.contact || '';
+    document.getElementById('b0-cy').value = b.country || '';
+    document.getElementById('b0-pay').value = b.payterm || '';
+    switchBTab(0);
+  }
+  scheduleDraftSave();
+  void forceCloudSync();
+  switchTab('invoice');
+  showAlert('form-alert','a-ok',`Buyer "${b.name}" applied to Shipment Lodging and Sales Invoicing forms.`);
 }
 
 function openBuyerModal(editIdx){
