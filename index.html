@@ -76,6 +76,7 @@ body{font-family:var(--sans);background:var(--s2);color:var(--ink);min-height:10
 .save-ind.syncing{background:var(--accent-l);color:var(--accent);border-color:#93c5fd;}
 .save-ind.saved{background:var(--green-l);color:var(--green);border-color:#86efac;}
 .save-ind.error{background:var(--red-l);color:var(--red);border-color:#fca5a5;}
+.save-ind[title]{cursor:help;}
 
 /* Tab bar */
 .tab-bar{
@@ -1298,6 +1299,7 @@ function setSaveIndicator(state, text){
   if(!el) return;
   el.className='save-ind'+(state?` ${state}`:'');
   el.textContent=text||'';
+  el.title='Cloud sync stores shared team data in Supabase. Status shows current save health.';
 }
 window.sbPromise=(async function initSupabase(){
   try{
