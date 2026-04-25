@@ -2305,6 +2305,11 @@ function fillSalesBuyer(b){
   if(terms && b.payterm) terms.value = b.payterm;
 }
 
+function buyerLoadMemory(){
+  // Force fresh read from storage every time (parity with consignee directory behavior)
+  return LS.get(KEY_BUYERS, []);
+}
+
 function renderConsigneeDirectory(){
   const list = consigneeLoadMemory();
   const grid = document.getElementById('consignee-grid');
@@ -2918,6 +2923,14 @@ function switchTab(name){
   else{ta.style.display='none';}
   document.getElementById('inv-badge').style.display=name==='invoice'?'':'none';
   if(name==='inventory') setTimeout(()=>{ try{ outgoingRender(); }catch(e){} }, 0);
+  if(name==='consignees'){
+    try{ consigneeLoadMemory(); }catch(e){}
+    try{ renderConsigneeDirectory(); }catch(e){}
+  }
+  if(name==='buyers'){
+    try{ buyerLoadMemory(); }catch(e){}
+    try{ renderBuyerDirectory(); }catch(e){}
+  }
 }
 
 function lockTabs(){
@@ -4278,7 +4291,7 @@ function invRender(){
 
 
 function renderBuyerDirectory(){
-  const buyers=LS.get(KEY_BUYERS);
+  const buyers=buyerLoadMemory();
   const grid=document.getElementById('buyer-grid');
   const empty=document.getElementById('buyers-empty');
   if(!buyers.length){grid.innerHTML='';empty.style.display='block';return;}
