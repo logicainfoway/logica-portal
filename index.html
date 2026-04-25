@@ -653,10 +653,12 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 
     <!-- SIGN IN -->
     <div class="auth-view active" id="auth-signin">
-      <div class="auth-err" id="signin-err"></div>
-      <div class="auth-field"><label>Email Address</label><input type="email" id="signin-email" name="username" autocomplete="username email"></div>
-      <div class="auth-field"><label>Password</label><input type="password" id="signin-pass" name="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSignIn()"></div>
-      <button class="auth-btn" onclick="authSignIn()">Sign In</button>
+      <form id="signin-form" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();authSignIn();return false;">
+        <div class="auth-err" id="signin-err"></div>
+        <div class="auth-field"><label>Email Address</label><input type="email" id="signin-email" name="email" autocomplete="username email" autocapitalize="none" spellcheck="false"></div>
+        <div class="auth-field"><label>Password</label><input type="password" id="signin-pass" name="password" autocomplete="current-password"></div>
+        <button class="auth-btn" type="submit">Sign In</button>
+      </form>
       <div class="auth-links">
         <span class="auth-link" onclick="authShowTab('forgot-pass')">Forgot Password?</span>
         <span class="auth-link" onclick="authShowTab('forgot-user')">Forgot Username?</span>
@@ -665,13 +667,15 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 
     <!-- SIGN UP -->
     <div class="auth-view" id="auth-signup">
-      <div class="auth-err" id="signup-err"></div>
-      <div class="auth-ok"  id="signup-ok"></div>
-      <div class="auth-field"><label>Full Name</label><input type="text" id="signup-name" name="name" autocomplete="name"></div>
-      <div class="auth-field"><label>Email Address (Username)</label><input type="email" id="signup-email" name="new-username" autocomplete="username email"></div>
-      <div class="auth-field"><label>Create Password</label><input type="password" id="signup-pass" name="new-password" autocomplete="new-password"></div>
-      <div class="auth-field"><label>Confirm Password</label><input type="password" id="signup-pass2" name="new-password-confirm" autocomplete="new-password" onkeydown="if(event.key==='Enter')authSignUp()"></div>
-      <button class="auth-btn" onclick="authSignUp()">Create Account</button>
+      <form id="signup-form" method="post" action="#" autocomplete="on" onsubmit="event.preventDefault();authSignUp();return false;">
+        <div class="auth-err" id="signup-err"></div>
+        <div class="auth-ok"  id="signup-ok"></div>
+        <div class="auth-field"><label>Full Name</label><input type="text" id="signup-name" name="name" autocomplete="name"></div>
+        <div class="auth-field"><label>Email Address (Username)</label><input type="email" id="signup-email" name="email" autocomplete="username email" autocapitalize="none" spellcheck="false"></div>
+        <div class="auth-field"><label>Create Password</label><input type="password" id="signup-pass" name="password" autocomplete="new-password"></div>
+        <div class="auth-field"><label>Confirm Password</label><input type="password" id="signup-pass2" name="confirm_password" autocomplete="new-password"></div>
+        <button class="auth-btn" type="submit">Create Account</button>
+      </form>
     </div>
 
     <!-- FORGOT PASSWORD -->
