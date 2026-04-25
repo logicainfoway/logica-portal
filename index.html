@@ -3265,7 +3265,7 @@ function addBuyer(preset){
     <div class="field"><label>Address Line 2</label><input id="b${idx}-a2" value="${pre.a2||''}"></div>
     <div class="field"><label>TRN / Tax ID</label><input id="b${idx}-trn" value="${pre.trn||''}"></div>
     <div class="field"><label>Contact No.</label><input id="b${idx}-con" value="${pre.con||''}"></div>
-    <div class="field"><label>Country</label><input id="b${idx}-cy"></div>
+    <div class="field"><label>Country</label><input id="b${idx}-cy" value="${pre.cy||''}"></div>
     <div class="field"><label>Payment Terms (overrides global)</label><input id="b${idx}-pay" value="${pre.pay||''}"></div>
   </div>`;
   panes.appendChild(pane);
