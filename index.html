@@ -1051,13 +1051,13 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
 <div class="panel" id="panel-inventory">
   <div class="pg-head">
     <h2>Outgoing Inventory</h2>
-    <p>Auto-built from generated Commercial Invoices. Stock remains until Sales Invoices are marked as paid.</p>
+    <p>Auto-built from generated Commercial Invoices. Stock is reduced as soon as Sales Invoices are created.</p>
   </div>
 
   <div class="card">
     <div class="card-head">
       <div class="sec-ic">📊</div><h3>Destination Stock Sheets</h3>
-      <span class="sub">Net stock by destination (Shipped − Paid Sales)</span>
+      <span class="sub">Net stock by destination (Shipped − Sales)</span>
     </div>
     <div class="card-body" style="padding:0;">
       <div style="display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
@@ -1349,6 +1349,9 @@ const CLOUD_TRACKED_KEYS=[
 let sb=null;
 const KEY_CLOUD_DIRTY='logica_cloud_dirty';
 let _suppressCloudHooks=false;
+let _realtimeChannel = null;
+let _realtimeBound = false;
+let _lastRealtimeRefreshAt = 0;
 function cloudStamp(){
   const d=new Date();
   return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -1434,6 +1437,52 @@ async function forceCloudSync(){
   clearTimeout(_cloudSaveTimer);
   _cloudSaveTimer=null;
   await cloudFlushToServer();
+}
+async function refreshFromCloudAndRenderAll(){
+  await cloudHydrateFromServer();
+  try{ renderConsigneeDirectory(); }catch(e){}
+  try{ renderBuyerDirectory(); }catch(e){}
+  try{ renderArchive(); }catch(e){}
+  try{ renderTracker(); }catch(e){}
+  try{ renderFinance(); }catch(e){}
+  try{ sinvRenderList(); }catch(e){}
+  try{ invLoad(); invRender(); }catch(e){}
+  if(document.getElementById('panel-inventory')?.classList.contains('active')){
+    try{ outgoingRender(); }catch(e){}
+  }
+}
+async function bindRealtimeAppState(){
+  await window.sbPromise;
+  if(!sb || _realtimeBound) return;
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) return;
+  _realtimeBound = true;
+  _realtimeChannel = sb
+    .channel('app_state_live')
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'app_state',
+      filter: 'id=eq.1'
+    }, async ()=>{
+      // Avoid thrashing when multiple events arrive in a burst.
+      const now = Date.now();
+      if(now - _lastRealtimeRefreshAt < 500) return;
+      _lastRealtimeRefreshAt = now;
+      if(localStorage.getItem(KEY_CLOUD_DIRTY)==='1') return;
+      await refreshFromCloudAndRenderAll();
+    })
+    .subscribe((status)=>{
+      if(status==='SUBSCRIBED') setSaveIndicator('saved', `Live ${cloudStamp()}`);
+    });
+}
+async function unbindRealtimeAppState(){
+  await window.sbPromise;
+  _realtimeBound = false;
+  if(sb && _realtimeChannel){
+    try{ await sb.removeChannel(_realtimeChannel); }catch(e){}
+  }
+  _realtimeChannel = null;
 }
 (function setupCloudSyncLifecycle(){
   document.addEventListener('visibilitychange', ()=>{
@@ -2556,6 +2605,21 @@ function outExportJson(){
   URL.revokeObjectURL(a.href);
 }
 
+let _outgoingLiveTimer = null;
+function setOutgoingLiveMode(enable){
+  if(enable){
+    if(_outgoingLiveTimer) return;
+    _outgoingLiveTimer = setInterval(()=>{ void refreshOutgoingInventoryLive(); }, 10000);
+  }else if(_outgoingLiveTimer){
+    clearInterval(_outgoingLiveTimer);
+    _outgoingLiveTimer = null;
+  }
+}
+async function refreshOutgoingInventoryLive(){
+  try{ await cloudHydrateFromServer(); }catch(e){}
+  try{ outgoingRender(); }catch(e){}
+}
+
 function outgoingRender(){
   const wrap = document.getElementById('outgoing-sheets');
   if(!wrap) return;
@@ -2585,10 +2649,10 @@ function outgoingRender(){
     });
   });
 
-  // Subtract paid sales invoices (Stock release)
+  // Subtract all sales invoices (stock sold/released)
   let sinv = [];
   try{ sinv = JSON.parse(localStorage.getItem('sinv_invoices')||'[]'); }catch(e){ sinv=[]; }
-  sinv.filter(x=>x && x.paid).forEach(inv=>{
+  sinv.filter(x=>x).forEach(inv=>{
     const destLabel = (inv.dest||'').trim();
     const destKey = norm(destLabel);
     if(!destKey || !destMap.has(destKey)) return;
@@ -2774,6 +2838,7 @@ function authForgotUser(){
 async function authLogout(){
   await window.sbPromise;
   if(sb){
+    await unbindRealtimeAppState();
     try{ await sb.auth.signOut(); }catch(e){}
   }
   try{ localStorage.removeItem('lil_session'); }catch(e){}
@@ -2786,7 +2851,10 @@ window.onload=async ()=>{
   await window.sbPromise;
   if(sb){
     const { data:{ session } }=await sb.auth.getSession();
-    if(session) await cloudHydrateFromServer();
+    if(session){
+      await cloudHydrateFromServer();
+      await bindRealtimeAppState();
+    }
   }
 
   // ── Splash → Auth/Portal flow ──
@@ -2926,7 +2994,12 @@ function switchTab(name){
   if(name==='invoice'){ta.style.display='';ta.textContent='⚡ Generate Documents';ta.onclick=generateAll;}
   else{ta.style.display='none';}
   document.getElementById('inv-badge').style.display=name==='invoice'?'':'none';
-  if(name==='inventory') setTimeout(()=>{ try{ outgoingRender(); }catch(e){} }, 0);
+  if(name==='inventory'){
+    setOutgoingLiveMode(true);
+    setTimeout(()=>{ void refreshOutgoingInventoryLive(); }, 0);
+  }else{
+    setOutgoingLiveMode(false);
+  }
   if(name==='consignees'){
     try{ consigneeLoadMemory(); }catch(e){}
     try{ renderConsigneeDirectory(); }catch(e){}
