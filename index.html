@@ -1602,7 +1602,7 @@ function applyDraftState(draft){
       const panes=document.getElementById('bpanes');
       if(tabs && panes){
         tabs.innerHTML=''; panes.innerHTML=''; bCount=0;
-        draft.buyers.forEach(b=>addBuyer(b||{}));
+        addBuyer((draft.buyers[0]||{}));
         switchBTab(0);
       }
     }
@@ -3239,23 +3239,25 @@ function setRate(rate,source,date){
 // ═══════════════════════════════════════════════════════════════
 const BPRE=[
   {n:'',a1:'',a2:'',trn:'',con:'',cy:'',pay:'',sfx:''},
-  {n:'',a1:'',a2:'',trn:'',con:'',cy:'',pay:'',sfx:''},
 ];
 
 function addBuyer(preset){
-  const idx=bCount++;
-  const pre=preset||(BPRE[idx]||BPRE[1]);
-  const sfx=pre.sfx!==undefined?pre.sfx:(idx===0?'':String.fromCharCode(64+idx));
+  // Single-buyer mode: always keep only Buyer 1
+  const idx=0;
+  bCount=1;
+  const pre=preset||(BPRE[0]);
   const tabs=document.getElementById('btabs');
+  tabs.innerHTML='';
   const tab=document.createElement('div');
-  tab.className='btab'+(idx===0?' active':'');
+  tab.className='btab active';
   tab.id=`bt-${idx}`;
-  tab.textContent=idx===0?'Buyer 1 (Main)':`Buyer ${idx+1} (Sub-invoice)`;
+  tab.textContent='Buyer 1 (Main)';
   tab.onclick=()=>switchBTab(idx);
   tabs.appendChild(tab);
   const panes=document.getElementById('bpanes');
+  panes.innerHTML='';
   const pane=document.createElement('div');
-  pane.className='bpane'+(idx===0?' active':'');
+  pane.className='bpane active';
   pane.id=`bp-${idx}`;
   pane.innerHTML=`<div class="grid g3" style="margin-bottom:12px;">
     <div class="field" style="grid-column:1/3"><label>Buyer Company Name *</label><input id="b${idx}-n" value="${pre.n||''}"></div>
@@ -3265,8 +3267,7 @@ function addBuyer(preset){
     <div class="field"><label>Contact No.</label><input id="b${idx}-con" value="${pre.con||''}"></div>
     <div class="field"><label>Country</label><input id="b${idx}-cy"></div>
     <div class="field"><label>Payment Terms (overrides global)</label><input id="b${idx}-pay" value="${pre.pay||''}"></div>
-  </div>
-  ${idx>0?`<button class="btn btn-danger btn-sm" onclick="remBuyer(${idx})">Remove</button>`:''}`;
+  </div>`;
   panes.appendChild(pane);
 
   // Attach saved-name dropdown to buyer company name input
@@ -3313,12 +3314,18 @@ function switchBTab(i){
 }
 function remBuyer(i){document.getElementById(`bt-${i}`)?.remove();document.getElementById(`bp-${i}`)?.remove();}
 function getBuyers(){
-  const res=[];
-  for(let i=0;i<bCount;i++){
-    if(!document.getElementById(`bp-${i}`))continue;
-    res.push({n:g(`b${i}-n`),a1:g(`b${i}-a1`),a2:g(`b${i}-a2`),trn:g(`b${i}-trn`),con:g(`b${i}-con`),cy:g(`b${i}-cy`),pay:g(`b${i}-pay`),sfx:g(`b${i}-s`)});
-  }
-  return res;
+  const hasBuyer = !!document.getElementById('bp-0');
+  if(!hasBuyer) return [];
+  return [{
+    n:g('b0-n'),
+    a1:g('b0-a1'),
+    a2:g('b0-a2'),
+    trn:g('b0-trn'),
+    con:g('b0-con'),
+    cy:g('b0-cy'),
+    pay:g('b0-pay'),
+    sfx:''
+  }];
 }
 
 function openBuyerPickerForEntry(){
@@ -3424,7 +3431,7 @@ function pickBuyerForEntry(i){
   const b=buyers[i];
   if(!b)return;
   addBuyer({n:b.name,a1:b.addr1,a2:b.addr2,trn:b.trn,con:b.contact,cy:b.country,pay:b.payterm,sfx:''});
-  switchBTab(bCount-1);
+  switchBTab(0);
   document.getElementById('buyer-picker-modal')?.remove();
 }
 
