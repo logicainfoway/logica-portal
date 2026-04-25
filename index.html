@@ -1343,6 +1343,8 @@ const CLOUD_TRACKED_KEYS=[
   'sinv_invoices','desc_memory','inv_purchases','inv_transfers','inv_sales',KEY_DRAFTS
 ];
 let sb=null;
+const KEY_CLOUD_DIRTY='logica_cloud_dirty';
+let _suppressCloudHooks=false;
 function cloudStamp(){
   const d=new Date();
   return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -1370,10 +1372,16 @@ async function cloudHydrateFromServer(){
   if(!sb)return;
   const { data:{ session } }=await sb.auth.getSession();
   if(!session)return;
+  // If local has unsynced edits (e.g., tab closed before sync finished), push local first.
+  if(localStorage.getItem(KEY_CLOUD_DIRTY)==='1'){
+    await cloudFlushToServer();
+    return;
+  }
   const { data, error }=await sb.from('app_state').select('payload').eq('id',1).maybeSingle();
   if(error){ console.warn('Cloud load:',error.message); return; }
   if(!data||!data.payload||typeof data.payload!=='object')return;
   const p=data.payload;
+  _suppressCloudHooks=true;
   for(const key of CLOUD_TRACKED_KEYS){
     if(p[key]===undefined)continue;
     try{
@@ -1384,10 +1392,13 @@ async function cloudHydrateFromServer(){
       localStorage.setItem(key, typeof p[key]==='string'? p[key]: JSON.stringify(p[key]));
     }catch(e){}
   }
+  _suppressCloudHooks=false;
+  setSaveIndicator('saved', `Loaded ${cloudStamp()}`);
 }
 let _cloudSaveTimer=null;
 function scheduleCloudSave(){
   if(!sb)return;
+  localStorage.setItem(KEY_CLOUD_DIRTY,'1');
   setSaveIndicator('syncing', 'Saving...');
   clearTimeout(_cloudSaveTimer);
   _cloudSaveTimer=setTimeout(()=>{ cloudFlushToServer(); },2200);
@@ -1410,7 +1421,10 @@ async function cloudFlushToServer(){
     { onConflict:'id' }
   );
   if(error){ console.warn('Cloud save:',error.message); setSaveIndicator('error','Save failed'); }
-  else setSaveIndicator('saved', `Saved ${cloudStamp()}`);
+  else{
+    localStorage.removeItem(KEY_CLOUD_DIRTY);
+    setSaveIndicator('saved', `Saved ${cloudStamp()}`);
+  }
 }
 async function forceCloudSync(){
   clearTimeout(_cloudSaveTimer);
@@ -1426,10 +1440,14 @@ async function forceCloudSync(){
 })();
 (function patchCloudLocalStorage(){
   const _set=LS.set.bind(LS);
-  LS.set=function(k,v){ _set(k,v); if(CLOUD_TRACKED_KEYS.includes(k))scheduleCloudSave(); };
+  LS.set=function(k,v){
+    _set(k,v);
+    if(!_suppressCloudHooks && CLOUD_TRACKED_KEYS.includes(k))scheduleCloudSave();
+  };
   const orig=Storage.prototype.setItem;
   Storage.prototype.setItem=function(key,val){
     orig.apply(this,arguments);
+    if(_suppressCloudHooks) return;
     if(this===localStorage && CLOUD_TRACKED_KEYS.includes(key))scheduleCloudSave();
   };
 })();
