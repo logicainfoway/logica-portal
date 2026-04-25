@@ -2318,6 +2318,20 @@ function consigneeSaveFromForm(){
   consigneeUpsert(obj);
 }
 
+function consigneeSaveFromSalesForm(){
+  const name = (document.getElementById('sinv-cn-name')?.value||'').trim();
+  if(!name) return;
+  consigneeUpsert({
+    name,
+    addr1:(document.getElementById('sinv-cn-addr')?.value||'').trim(),
+    addr2:(document.getElementById('sinv-cn-addr2')?.value||'').trim(),
+    trn:(document.getElementById('sinv-cn-trn')?.value||'').trim(),
+    contact:(document.getElementById('sinv-cn-phone')?.value||'').trim(),
+    country:(document.getElementById('sinv-cn-country')?.value||'').trim(),
+    pcar:(document.getElementById('sinv-pcar')?.value||'').trim(),
+  });
+}
+
 function consigneeGetOptions(filter){
   const q = (filter||'').trim().toLowerCase();
   return _consigneeMemory
@@ -2537,6 +2551,26 @@ function buyerSaveFromForm(idx){
   if(existingIdx >= 0){
     const prevCreatedAt = buyers[existingIdx]?.createdAt;
     buyers[existingIdx] = { ...buyers[existingIdx], ...buyer, createdAt: prevCreatedAt || buyer.createdAt };
+  }else{
+    buyers.push(buyer);
+  }
+  LS.set(KEY_BUYERS, buyers);
+}
+
+function buyerSaveFromSalesForm(){
+  const name = (document.getElementById('sinv-cust-name')?.value||'').trim();
+  if(!name) return;
+  const buyer = {
+    name,
+    addr1:(document.getElementById('sinv-cust-addr')?.value||'').trim(),
+    addr2:(document.getElementById('sinv-cust-addr2')?.value||'').trim(),
+    payterm:(document.getElementById('sinv-terms')?.value||'').trim() || 'After Inspection',
+    createdAt:new Date().toISOString()
+  };
+  const buyers = LS.get(KEY_BUYERS);
+  const existingIdx = buyers.findIndex(b => (b.name||'').toLowerCase() === name.toLowerCase());
+  if(existingIdx >= 0){
+    buyers[existingIdx] = { ...buyers[existingIdx], ...buyer };
   }else{
     buyers.push(buyer);
   }
@@ -2927,6 +2961,10 @@ window.onload=async ()=>{
       (b)=>{ if(!b) return; fillSalesConsignee(b); }
     );
   }
+  ['sinv-cn-name','sinv-cn-addr','sinv-cn-addr2','sinv-cn-trn','sinv-cn-phone','sinv-cn-country','sinv-pcar'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('blur', ()=>consigneeSaveFromSalesForm());
+  });
   const sinvBuyerEl = document.getElementById('sinv-cust-name');
   if(sinvBuyerEl){
     attachInlineDropdown(
@@ -2942,6 +2980,10 @@ window.onload=async ()=>{
       (b)=>{ if(!b) return; fillSalesBuyer(b); }
     );
   }
+  ['sinv-cust-name','sinv-cust-addr','sinv-cust-addr2','sinv-terms'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('blur', ()=>buyerSaveFromSalesForm());
+  });
   updateDatalist();
   invLoad();
   invRender();
