@@ -77,6 +77,12 @@ body{font-family:var(--sans);background:var(--s2);color:var(--ink);min-height:10
 .save-ind.saved{background:var(--green-l);color:var(--green);border-color:#86efac;}
 .save-ind.error{background:var(--red-l);color:var(--red);border-color:#fca5a5;}
 .save-ind[title]{cursor:help;}
+.live-ind{
+  font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);
+  background:var(--s3);color:var(--ink3);white-space:nowrap;
+}
+.live-ind.on{background:var(--green-l);color:var(--green);border-color:#86efac;}
+.live-ind.off{background:var(--amber-l);color:var(--amber);border-color:#fcd34d;}
 
 /* Tab bar */
 .tab-bar{
@@ -739,6 +745,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
   </div>
   <div class="topbar-right">
     <span id="save-indicator" class="save-ind">Local only</span>
+    <span id="live-indicator" class="live-ind off">Live updates: Off</span>
     <span class="badge b-blue" id="inv-badge" style="display:none"></span>
     <button class="btn btn-primary" id="topbar-action" onclick="generateAll()">⚡ Generate Documents</button>
   </div>
@@ -1363,16 +1370,24 @@ function setSaveIndicator(state, text){
   el.textContent=text||'';
   el.title='Cloud sync stores shared team data in Supabase. Status shows current save health.';
 }
+function setLiveIndicator(on, detail){
+  const el=document.getElementById('live-indicator');
+  if(!el) return;
+  el.className='live-ind '+(on?'on':'off');
+  el.textContent='Live updates: '+(on?'On':'Off');
+  el.title=detail||'Realtime push between signed-in users.';
+}
 window.sbPromise=(async function initSupabase(){
   try{
     const u=window.SUPABASE_URL,k=window.SUPABASE_ANON_KEY;
-    if(!u||!k){ setSaveIndicator('', 'Local only'); return null; }
+    if(!u||!k){ setSaveIndicator('', 'Local only'); setLiveIndicator(false,'Supabase keys are not configured.'); return null; }
     const { createClient }=await import('https://esm.sh/@supabase/supabase-js@2');
     sb=createClient(u,k,{auth:{persistSession:true,storage:localStorage,detectSessionInUrl:true}});
     window.sb=sb;
     setSaveIndicator('saved', `Cloud connected`);
+    setLiveIndicator(false,'Cloud connected. Live updates will turn on after sign-in.');
     return sb;
-  }catch(e){ console.warn('Supabase init failed',e); setSaveIndicator('error','Cloud unavailable'); return null; }
+  }catch(e){ console.warn('Supabase init failed',e); setSaveIndicator('error','Cloud unavailable'); setLiveIndicator(false,'Realtime unavailable.'); return null; }
 })();
 async function cloudHydrateFromServer(){
   await window.sbPromise;
@@ -1455,7 +1470,7 @@ async function bindRealtimeAppState(){
   await window.sbPromise;
   if(!sb || _realtimeBound) return;
   const { data:{ session } } = await sb.auth.getSession();
-  if(!session) return;
+  if(!session){ setLiveIndicator(false,'Sign in to enable live updates.'); return; }
   _realtimeBound = true;
   _realtimeChannel = sb
     .channel('app_state_live')
@@ -1473,12 +1488,18 @@ async function bindRealtimeAppState(){
       await refreshFromCloudAndRenderAll();
     })
     .subscribe((status)=>{
-      if(status==='SUBSCRIBED') setSaveIndicator('saved', `Live ${cloudStamp()}`);
+      if(status==='SUBSCRIBED'){
+        setLiveIndicator(true,'Realtime push is active.');
+        setSaveIndicator('saved', `Live ${cloudStamp()}`);
+      }else if(status==='CHANNEL_ERROR' || status==='TIMED_OUT' || status==='CLOSED'){
+        setLiveIndicator(false,`Realtime status: ${status}`);
+      }
     });
 }
 async function unbindRealtimeAppState(){
   await window.sbPromise;
   _realtimeBound = false;
+  setLiveIndicator(false,'Live updates are off.');
   if(sb && _realtimeChannel){
     try{ await sb.removeChannel(_realtimeChannel); }catch(e){}
   }
