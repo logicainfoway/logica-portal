@@ -69,6 +69,13 @@ body{font-family:var(--sans);background:var(--s2);color:var(--ink);min-height:10
 .topbar-title{font-size:14px;font-weight:700;color:var(--ink);}
 .topbar-sub{font-size:11.5px;color:var(--ink3);}
 .topbar-right{display:flex;gap:8px;align-items:center;}
+.save-ind{
+  font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);
+  background:var(--s3);color:var(--ink3);white-space:nowrap;
+}
+.save-ind.syncing{background:var(--accent-l);color:var(--accent);border-color:#93c5fd;}
+.save-ind.saved{background:var(--green-l);color:var(--green);border-color:#86efac;}
+.save-ind.error{background:var(--red-l);color:var(--red);border-color:#fca5a5;}
 
 /* Tab bar */
 .tab-bar{
@@ -724,6 +731,7 @@ hr.dv{border:none;border-top:1px solid var(--border);margin:16px 0;}
     <span class="topbar-sub" id="tb-sub"></span>
   </div>
   <div class="topbar-right">
+    <span id="save-indicator" class="save-ind">Local only</span>
     <span class="badge b-blue" id="inv-badge" style="display:none"></span>
     <button class="btn btn-primary" id="topbar-action" onclick="generateAll()">⚡ Generate Documents</button>
   </div>
@@ -1273,22 +1281,34 @@ const KEY_SHIPMENTS='logica_shipments';
 const KEY_SETTINGS='logica_settings';
 const KEY_TRACKER='logica_tracker';
 const KEY_OUTGOING='logica_outgoing_inventory';
+const KEY_DRAFTS='logica_drafts';
 
 // Keys synced to Supabase `app_state` for shared team data (when cloud is configured)
 const CLOUD_TRACKED_KEYS=[
   KEY_BUYERS,KEY_CONSIGNEE,KEY_SHIPMENTS,KEY_SETTINGS,KEY_TRACKER,KEY_OUTGOING,
-  'sinv_invoices','desc_memory','inv_purchases','inv_transfers','inv_sales'
+  'sinv_invoices','desc_memory','inv_purchases','inv_transfers','inv_sales',KEY_DRAFTS
 ];
 let sb=null;
+function cloudStamp(){
+  const d=new Date();
+  return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+function setSaveIndicator(state, text){
+  const el=document.getElementById('save-indicator');
+  if(!el) return;
+  el.className='save-ind'+(state?` ${state}`:'');
+  el.textContent=text||'';
+}
 window.sbPromise=(async function initSupabase(){
   try{
     const u=window.SUPABASE_URL,k=window.SUPABASE_ANON_KEY;
-    if(!u||!k)return null;
+    if(!u||!k){ setSaveIndicator('', 'Local only'); return null; }
     const { createClient }=await import('https://esm.sh/@supabase/supabase-js@2');
     sb=createClient(u,k,{auth:{persistSession:true,storage:localStorage,detectSessionInUrl:true}});
     window.sb=sb;
+    setSaveIndicator('saved', `Cloud connected`);
     return sb;
-  }catch(e){ console.warn('Supabase init failed',e); return null; }
+  }catch(e){ console.warn('Supabase init failed',e); setSaveIndicator('error','Cloud unavailable'); return null; }
 })();
 async function cloudHydrateFromServer(){
   await window.sbPromise;
@@ -1313,6 +1333,7 @@ async function cloudHydrateFromServer(){
 let _cloudSaveTimer=null;
 function scheduleCloudSave(){
   if(!sb)return;
+  setSaveIndicator('syncing', 'Saving...');
   clearTimeout(_cloudSaveTimer);
   _cloudSaveTimer=setTimeout(()=>{ cloudFlushToServer(); },2200);
 }
@@ -1322,7 +1343,7 @@ async function cloudFlushToServer(){
   const { data:{ session } }=await sb.auth.getSession();
   if(!session)return;
   const { data: row, error: readErr }=await sb.from('app_state').select('payload').eq('id',1).maybeSingle();
-  if(readErr){ console.warn('Cloud read:',readErr.message); return; }
+  if(readErr){ console.warn('Cloud read:',readErr.message); setSaveIndicator('error','Save failed'); return; }
   const merged={ ...(row?.payload && typeof row.payload==='object' ? row.payload : {}) };
   for(const key of CLOUD_TRACKED_KEYS){
     const raw=localStorage.getItem(key);
@@ -1333,7 +1354,8 @@ async function cloudFlushToServer(){
     { id:1, payload:merged, updated_at:new Date().toISOString() },
     { onConflict:'id' }
   );
-  if(error)console.warn('Cloud save:',error.message);
+  if(error){ console.warn('Cloud save:',error.message); setSaveIndicator('error','Save failed'); }
+  else setSaveIndicator('saved', `Saved ${cloudStamp()}`);
 }
 async function forceCloudSync(){
   clearTimeout(_cloudSaveTimer);
@@ -1357,6 +1379,131 @@ async function forceCloudSync(){
   };
 })();
 
+// Draft autosave for in-progress work (restored even after browser/tab reopen)
+let _draftTimer=null;
+function scheduleDraftSave(){
+  clearTimeout(_draftTimer);
+  _draftTimer=setTimeout(saveDraftStateNow, 500);
+}
+function saveDraftStateNow(){
+  const draft = collectDraftState();
+  LS.set(KEY_DRAFTS, draft);
+  syncDescMemoryFromCurrentRows();
+}
+function collectDraftState(){
+  const fields={};
+  document.querySelectorAll('.shell input[id], .shell select[id], .shell textarea[id]').forEach(el=>{
+    if(!el || !el.id) return;
+    const t=(el.type||'').toLowerCase();
+    if(t==='password' || t==='file') return;
+    if(t==='checkbox' || t==='radio') fields[el.id]=!!el.checked;
+    else fields[el.id]=el.value ?? '';
+  });
+  const shipmentItems=[...document.querySelectorAll('#ibody tr')].map(tr=>{
+    const ins=tr.querySelectorAll('input');
+    return{
+      desc:(ins[0]?.value||'').trim(),
+      hsn:(ins[1]?.value||'').trim(),
+      qty:ins[2]?.value||'',
+      price:ins[3]?.value||''
+    };
+  }).filter(x=>x.desc||x.hsn||x.qty||x.price);
+  const salesItems=[...document.querySelectorAll('#sinv-items-body tr')].map(tr=>{
+    const ins=tr.querySelectorAll('input');
+    return{
+      desc:(ins[0]?.value||'').trim(),
+      hsn:(ins[1]?.value||'').trim(),
+      qty:ins[2]?.value||'',
+      price:ins[3]?.value||''
+    };
+  }).filter(x=>x.desc||x.hsn||x.qty||x.price);
+  return{
+    savedAt:new Date().toISOString(),
+    fields,
+    shipmentItems,
+    salesItems,
+    buyers:getBuyers(),
+    plRows:JSON.parse(JSON.stringify(plRows||[])),
+    imeiData:JSON.parse(JSON.stringify(imeiData||[])),
+  };
+}
+function applyDraftState(draft){
+  if(!draft || typeof draft!=='object') return;
+  try{
+    if(draft.fields && typeof draft.fields==='object'){
+      Object.entries(draft.fields).forEach(([id,val])=>{
+        const el=document.getElementById(id);
+        if(!el) return;
+        const t=(el.type||'').toLowerCase();
+        if(t==='password' || t==='file') return;
+        if(t==='checkbox' || t==='radio') el.checked=!!val;
+        else el.value=(val??'');
+      });
+    }
+
+    if(Array.isArray(draft.buyers) && draft.buyers.length){
+      const tabs=document.getElementById('btabs');
+      const panes=document.getElementById('bpanes');
+      if(tabs && panes){
+        tabs.innerHTML=''; panes.innerHTML=''; bCount=0;
+        draft.buyers.forEach(b=>addBuyer(b||{}));
+        switchBTab(0);
+      }
+    }
+
+    if(Array.isArray(draft.shipmentItems) && draft.shipmentItems.length){
+      const ib=document.getElementById('ibody');
+      if(ib){
+        ib.innerHTML='';
+        draft.shipmentItems.forEach(it=>addItem(it||{}));
+      }
+    }
+
+    if(Array.isArray(draft.salesItems) && draft.salesItems.length){
+      const sb=document.getElementById('sinv-items-body');
+      if(sb){
+        sb.innerHTML='';
+        draft.salesItems.forEach(it=>sinvAddItem(it||{}));
+        sinvRecalc();
+      }
+    }
+
+    if(Array.isArray(draft.plRows)){
+      plRows = draft.plRows.map(r=>({
+        boxLabel:r?.boxLabel||'',
+        desc:r?.desc||'',
+        pcs:+r?.pcs||0
+      }));
+      renderPlTable();
+    }
+    if(Array.isArray(draft.imeiData)){
+      imeiData = draft.imeiData.map((x,i)=>({
+        sno:+(x?.sno||i+1),
+        box:String(x?.box||'1'),
+        imei:String(x?.imei||''),
+        model:String(x?.model||''),
+        color:String(x?.color||''),
+        party:String(x?.party||''),
+        bill:String(x?.bill||''),
+      }));
+      renderImeiTable();
+      updatePlTotal();
+    }
+  }catch(e){
+    console.warn('Draft restore failed',e);
+  }
+}
+function syncDescMemoryFromCurrentRows(){
+  try{
+    document.querySelectorAll('#ibody tr, #sinv-items-body tr').forEach(tr=>{
+      const ins=tr.querySelectorAll('input');
+      const desc=(ins[0]?.value||'').trim();
+      const hsn =(ins[1]?.value||'').trim();
+      if(desc && hsn) descSave(desc, hsn);
+    });
+  }catch(e){}
+}
+
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
@@ -1372,14 +1519,14 @@ function sinvSwitchTab(t){
   if(t==='list') sinvRenderList();
 }
 
-function sinvAddItem(){
+function sinvAddItem(pre){
   const tbody = document.getElementById('sinv-items-body');
   if(!tbody) return;
   const tr = document.createElement('tr');
 
   // Description cell with autocomplete
   const descTd = document.createElement('td');
-  const descWrap = descMakeInput('', (inp, hsn) => {
+  const descWrap = descMakeInput(pre?.desc||'', (inp, hsn) => {
     const hsnInp = tr.querySelector('input[data-sinv-hsn]');
     if(hsnInp && hsn) hsnInp.value = hsn;
     inp._currentHsn = hsn||'';
@@ -1390,11 +1537,11 @@ function sinvAddItem(){
 
   const rest = document.createElement('template');
   rest.innerHTML =
-    '<td><input type="text" data-sinv-hsn value="" style="width:100%;"></td>'+
-    '<td><input type="number" value="" min="1" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
-    '<td><input type="number" value="" min="0" oninput="sinvRecalc()" style="width:100%;text-align:right;"></td>'+
+    `<td><input type="text" data-sinv-hsn value="${escH(pre?.hsn||'')}" style="width:100%;"></td>`+
+    `<td><input type="number" value="${escH(pre?.qty||'')}" min="1" oninput="sinvRecalc();scheduleDraftSave();" style="width:100%;text-align:right;"></td>`+
+    `<td><input type="number" value="${escH(pre?.price||'')}" min="0" oninput="sinvRecalc();scheduleDraftSave();" style="width:100%;text-align:right;"></td>`+
     '<td><input type="number" value="" readonly style="width:100%;text-align:right;background:var(--s2);"></td>'+
-    '<td><button class="ic-btn" onclick="this.closest(\'tr\').remove();sinvRecalc();">✕</button></td>';
+    '<td><button class="ic-btn" onclick="this.closest(\'tr\').remove();sinvRecalc();scheduleDraftSave();">✕</button></td>';
   tr.appendChild(descTd);
   rest.content.childNodes.forEach(n => tr.appendChild(n.cloneNode(true)));
 
@@ -1408,6 +1555,7 @@ function sinvAddItem(){
     });
   }
   sinvRecalc();
+  scheduleDraftSave();
 }
 
 function sinvRecalc(){
@@ -1856,6 +2004,8 @@ function sinvClear(){
   document.getElementById('sinv-doc-body').innerHTML='';
   document.getElementById('sinv-preview-wrap').style.display='none';
   sinvAddItem();
+  scheduleDraftSave();
+  void forceCloudSync();
 }
 
 function sinvLhHead(addr1,addr2){
@@ -2505,12 +2655,21 @@ window.onload=async ()=>{
   // Initial render of outgoing inventory sheets
   try{ outgoingRender(); }catch(e){}
 
+  // Restore in-progress draft state (includes unsaved form work)
+  applyDraftState(LS.get(KEY_DRAFTS, null));
+
   // Lock tabs on any change to the entry form (delegated listener)
   const formPanel = document.getElementById('ipanel-form');
   if(formPanel){
     formPanel.addEventListener('input', ()=>lockTabs(), {passive:true});
     formPanel.addEventListener('change', ()=>lockTabs(), {passive:true});
   }
+  const shellRoot=document.querySelector('.shell');
+  if(shellRoot){
+    shellRoot.addEventListener('input', ()=>scheduleDraftSave(), {passive:true});
+    shellRoot.addEventListener('change', ()=>scheduleDraftSave(), {passive:true});
+  }
+  scheduleDraftSave();
   initSelectPlaceholders();
 };
 
@@ -2831,12 +2990,12 @@ function pickBuyerForEntry(i){
 // ═══════════════════════════════════════════════════════════════
 // LINE ITEMS
 // ═══════════════════════════════════════════════════════════════
-function addItem(){
+function addItem(pre){
   const tr = document.createElement('tr');
 
   // Description cell with autocomplete
   const descTd = document.createElement('td');
-  const descWrap = descMakeInput('', (inp, hsn) => {
+  const descWrap = descMakeInput(pre?.desc||'', (inp, hsn) => {
     const hsnInp = tr.querySelector('input[data-ship-hsn]');
     if(hsnInp && hsn) hsnInp.value = hsn;
     rcRow(tr.querySelectorAll('input[type=number]')[0]);
@@ -2846,12 +3005,12 @@ function addItem(){
   // Remaining cells
   const rest = document.createElement('template');
   rest.innerHTML =
-    `<td><input type="text" data-ship-hsn value=""></td>`+
-    `<td><input type="number" value="" min="1" oninput="rcRow(this)"></td>`+
-    `<td><input type="number" value="" step="0.01" oninput="rcRow(this)"></td>`+
+    `<td><input type="text" data-ship-hsn value="${escH(pre?.hsn||'')}"></td>`+
+    `<td><input type="number" value="${escH(pre?.qty||'')}" min="1" oninput="rcRow(this);scheduleDraftSave();"></td>`+
+    `<td><input type="number" value="${escH(pre?.price||'')}" step="0.01" oninput="rcRow(this);scheduleDraftSave();"></td>`+
     `<td><input type="number" readonly value=""></td>`+
     `<td><input type="number" readonly value=""></td>`+
-    `<td><button class="ic-btn" onclick="this.closest('tr').remove();updatePlTotal();" title="Remove row">✕</button></td>`;
+    `<td><button class="ic-btn" onclick="this.closest('tr').remove();updatePlTotal();scheduleDraftSave();" title="Remove row">✕</button></td>`;
   tr.appendChild(descTd);
   rest.content.childNodes.forEach(n => tr.appendChild(n.cloneNode(true)));
 
@@ -2864,6 +3023,9 @@ function addItem(){
       if(desc && hsn) descSave(desc, hsn);
     });
   }
+  const nums = tr.querySelectorAll('input[type=number]');
+  if(nums[0]) rcRow(nums[0]);
+  scheduleDraftSave();
 }
 
 function rcRow(el){
@@ -4331,7 +4493,7 @@ function fmtD(s){if(!s)return'';const d=new Date(s);return`${String(d.getDate())
 function showAlert(id,cls,msg){const e=document.getElementById(id);if(!e)return;e.className=`alert ${cls} show`;e.textContent=msg;setTimeout(()=>e.classList.remove('show'),5000);}
 function showL(m){document.getElementById('ltxt').textContent=m||'';document.getElementById('loader').classList.add('show');}
 function hideL(){document.getElementById('loader').classList.remove('show');}
-function resetForm(){if(!confirm('Reset form?'))return;document.getElementById('ibody').innerHTML='';addItem();document.getElementById('plbody').innerHTML='';addPackRow(true);imeiData=[];document.getElementById('imei-card').style.display='none';document.getElementById('pack-file-badge').style.display='none';document.getElementById('pack-file-input').value='';SD=null;}
+function resetForm(){if(!confirm('Reset form?'))return;document.getElementById('ibody').innerHTML='';addItem();document.getElementById('plbody').innerHTML='';addPackRow(true);imeiData=[];document.getElementById('imei-card').style.display='none';document.getElementById('pack-file-badge').style.display='none';document.getElementById('pack-file-input').value='';SD=null;scheduleDraftSave();void forceCloudSync();}
 
 function n2w(n){
   const a=['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
@@ -4417,10 +4579,12 @@ function renderPlTable(){
         bxInp.oninput = () => {
           // Update the box label on the first row of the group, then regroup
           if(plRows[row.rowIdx]) plRows[row.rowIdx].boxLabel = bxInp.value.trim();
+          scheduleDraftSave();
         };
         bxInp.onblur = () => {
           if(plRows[row.rowIdx]) plRows[row.rowIdx].boxLabel = bxInp.value.trim();
           renderPlTable(); // regroup rows visually after edit
+          scheduleDraftSave();
         };
         td.appendChild(bxInp);
         if(isMixed){
@@ -4437,6 +4601,7 @@ function renderPlTable(){
       const wrap = descMakeInput('', (inp/*, hsn*/)=>{
         // Keep the underlying packing list row in sync
         if(plRows[row.rowIdx]) plRows[row.rowIdx].desc = inp.value;
+        scheduleDraftSave();
       });
       wrap._input.value = row.desc || '';
       wrap._input._currentHsn = descGetHsn(wrap._input.value);
@@ -4457,6 +4622,7 @@ function renderPlTable(){
         // Keep the readonly total aligned with the pcs input
         totInp.value = v ? String(v) : '';
         renderPlTotals();
+        scheduleDraftSave();
       };
       pcsTd.appendChild(pcsInp);
       tr.appendChild(pcsTd);
@@ -4497,6 +4663,7 @@ function renderPlTotals(){
 function plDeleteRow(rowIdx){
   plRows.splice(rowIdx, 1);
   renderPlTable();
+  scheduleDraftSave();
 }
 
 function addPackRow(isDefault, pre){
@@ -4512,6 +4679,7 @@ function addPackRow(isDefault, pre){
 
   plRows.push({boxLabel: effectiveBox, desc, pcs});
   renderPlTable();
+  scheduleDraftSave();
 }
 
 function updatePlTotal(){ renderPlTotals(); }
@@ -4615,6 +4783,8 @@ function parseExcelPack(rows,fileName){
   const badge=document.getElementById('pack-file-badge');
   badge.style.display='inline';
   badge.textContent='✅ '+fileName+' — '+imeiData.length+' serials, '+boxes.length+' boxes';
+  scheduleDraftSave();
+  void forceCloudSync();
 }
 
 function getImeiByBox(){
@@ -4655,6 +4825,8 @@ function clearImeiData(){
   document.getElementById('pack-file-badge').style.display='none';
   updatePlTotal();
   document.getElementById('pack-file-input').value='';
+  scheduleDraftSave();
+  void forceCloudSync();
 }
 
 function openGmailCompose(){
